@@ -10,5 +10,5 @@ app.get('/',(req, res)=>{
 })
 
 app.listen(PORT, () =>{
-    console.log("IT'S ALIVE!!!!!")
+    console.log(`Servidor ouvindo no endereço: localhost:${PORT}`)
 })
