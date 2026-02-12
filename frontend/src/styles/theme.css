@@ -1,0 +1,22 @@
+:root {
+  --unasp-orange: #FF6B35;
+  --unasp-navy: #003366;
+  --card-bg: #ffffff;
+  --card-border: rgba(148, 163, 184, 0.25);
+}
+
+.bg-unasp-orange {
+  background-color: var(--unasp-orange);
+}
+
+.text-unasp-orange {
+  color: var(--unasp-orange);
+}
+
+.bg-unasp-navy {
+  background-color: var(--unasp-navy);
+}
+
+.text-unasp-navy {
+  color: var(--unasp-navy);
+}

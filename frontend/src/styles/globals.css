@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "./theme.css";
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
