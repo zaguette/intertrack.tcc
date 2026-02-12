@@ -12,3 +12,119 @@ generator client {
 datasource db {
   provider = "mysql"
 }
+
+model TiposUsuario {
+  id        Int        @id @default(autoincrement())
+  nome_tipo String     @db.VarChar(50)
+
+  usuarios  Usuario[]
+}
+
+model Usuario {
+  id         Int      @id @default(autoincrement())
+  nome       String   @db.VarChar(100)
+  email      String   @unique @db.VarChar(100)
+  senha      String   @db.VarChar(255)
+  tipo_id    Int
+  telefone   String?  @db.VarChar(30)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  tipo       TiposUsuario @relation(fields: [tipo_id], references: [id])
+  nomesEntrega NomesEntrega[]
+  encomendasRegistradas Encomenda[] @relation("FuncionarioEncomendas")
+  notificacoes Notificacao[]
+  auditorias  Auditoria[]
+  historicoAlteracoes HistoricoStatus[]
+}
+
+model NomesEntrega {
+  id            Int      @id @default(autoincrement())
+  usuario_id    Int
+  nome_completo String   @db.VarChar(150)
+  documento     String?  @db.VarChar(20)
+  parentesco    Parentesco
+  ativo         Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  usuario       Usuario  @relation(fields: [usuario_id], references: [id])
+  encomendas    Encomenda[]
+}
+
+model Encomenda {
+  id              Int      @id @default(autoincrement())
+  codigo_rastreio String?  @db.VarChar(50)
+  descricao       String?  @db.VarChar(255)
+  nome_entrega_id Int
+  funcionario_id  Int
+  status_atual_id Int
+  data_entrega    DateTime?
+  observacoes     String?  @db.Text
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  nomeEntrega NomesEntrega @relation(fields: [nome_entrega_id], references: [id])
+  funcionario Usuario      @relation("FuncionarioEncomendas", fields: [funcionario_id], references: [id])
+  statusAtual StatusEncomenda @relation(fields: [status_atual_id], references: [id])
+
+  notificacoes Notificacao[]
+  historico    HistoricoStatus[]
+}
+
+model StatusEncomenda {
+  id          Int      @id @default(autoincrement())
+  nome_status String   @db.VarChar(50)
+  descricao   String?  @db.VarChar(255)
+
+  encomendas  Encomenda[]
+  historicos  HistoricoStatus[]
+}
+
+model HistoricoStatus {
+  id             Int      @id @default(autoincrement())
+  encomenda_id   Int
+  status_id      Int
+  alterado_por   Int
+  data_alteracao DateTime @default(now())
+
+  encomenda Encomenda      @relation(fields: [encomenda_id], references: [id])
+  status    StatusEncomenda @relation(fields: [status_id], references: [id])
+  usuario   Usuario         @relation(fields: [alterado_por], references: [id])
+}
+
+model Notificacao {
+  id           Int      @id @default(autoincrement())
+  usuario_id   Int
+  encomenda_id Int
+  tipo         String?  @db.VarChar(20)
+  mensagem     String   @db.VarChar(255)
+  lida         Boolean  @default(false)
+  created_at   DateTime @default(now())
+
+  usuario   Usuario   @relation(fields: [usuario_id], references: [id])
+  encomenda Encomenda @relation(fields: [encomenda_id], references: [id])
+}
+
+model Auditoria {
+  id          Int      @id @default(autoincrement())
+  usuario_id  Int
+  entidade    String   @db.VarChar(100)
+  entidade_id Int
+  acao        String   @db.VarChar(50)
+  descricao   String?  @db.Text
+  ip_usuario  String?  @db.VarChar(45)
+  created_at  DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+}
+
+enum Parentesco {
+  proprio
+  pai
+  mae
+  irmao
+  irma
+  responsavel
+  outro
+}
