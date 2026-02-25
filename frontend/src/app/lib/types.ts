@@ -13,9 +13,11 @@ export type PackageItem = {
   id: string;
   studentName: string;
   code: string;
+  protocol?: string; // número de protocolo
   description?: string;
   status: PackageStatus;
   createdAt: string;
   availableAt?: string;
   collectedAt?: string;
+  collectedBy?: string; // nome de quem retirou
 };

@@ -17,6 +17,7 @@ import {
 } from "./lib/storage";
 import { PackageItem, User, UserRole } from "./lib/types";
 import { Eye, EyeOff, LogOut } from "lucide-react";
+import RegisterForm from "./components/RegisterForm";
 
 const defaultUsers: User[] = [
   {
@@ -48,6 +49,7 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("student");
   const [showPassword, setShowPassword] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
     const storedUsers = getStoredUsers();
@@ -225,6 +227,30 @@ export default function App() {
               </Button>
             </div>
 
+          <div className="mt-4 flex flex-col items-center gap-3 text-center">
+            <p className="text-sm text-slate-500">
+              Não tem login?{' '}
+              <button
+                type="button"
+                onClick={() => setShowRegister(true)}
+                className="ml-1 underline font-medium text-unasp-navy"
+              >
+                Cadastre-se aqui
+              </button>
+            </p>
+           </div>
+          
+           {showRegister && (
+             <div className="absolute inset-0 grid place-items-center bg-black/40 p-4">
+               <RegisterForm
+                 onCancel={() => setShowRegister(false)}
+                 onRegistered={(newUser: User) => {
+                   setUser(newUser);
+                   setShowRegister(false);
+                 }}
+               />
+             </div>
+           )}
           </Card>
           
           {/* Ícone de ajuda */}
