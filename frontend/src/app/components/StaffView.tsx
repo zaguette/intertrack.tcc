@@ -32,6 +32,7 @@ export default function StaffView({
   const [description, setDescription] = useState("");
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<PackageItem | null>(null);
 
   const pendingCount = packages.filter((item) => item.status === "pending").length;
   const availableCount = packages.filter((item) => item.status === "available").length;
@@ -171,9 +172,20 @@ export default function StaffView({
   }
 
   function removeItem(item: PackageItem) {
-    const updated = packages.filter((pkg) => pkg.id !== item.id);
+    // abrir modal de confirmação em vez de usar confirm nativo
+    setPendingDelete(item);
+  }
+
+  function confirmDelete() {
+    if (!pendingDelete) return;
+    const updated = packages.filter((pkg) => pkg.id !== pendingDelete.id);
     onPackagesChange(updated);
     toast.success("Encomenda removida.");
+    setPendingDelete(null);
+  }
+
+  function cancelDelete() {
+    setPendingDelete(null);
   }
 
   return (
@@ -335,6 +347,18 @@ export default function StaffView({
             </div>
           </div>
         ))}
+        {pendingDelete && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4">
+            <Card className="max-w-md w-full">
+              <h3 className="text-lg font-semibold">Confirmar exclusão</h3>
+              <p className="mt-2 text-sm text-slate-600">Tem certeza que deseja excluir a encomenda <strong>{pendingDelete.code}</strong> de <strong>{pendingDelete.studentName}</strong>? Esta ação não pode ser desfeita.</p>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="ghost" onClick={cancelDelete}>Cancelar</Button>
+                <Button variant="danger" onClick={confirmDelete}>Excluir</Button>
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
