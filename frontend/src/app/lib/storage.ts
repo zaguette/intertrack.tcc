@@ -1,8 +1,7 @@
 import { PackageItem, User } from "./types";
 
-const PACKAGES_KEY = "unasp_mail_packages";
-const USERS_KEY = "unasp_mail_users";
-const SESSION_KEY = "unasp_mail_session";
+const PACKAGES_KEY = "intertrack_packages_v2";
+const SESSION_KEY = "intertrack_session_v2";
 
 export function getStoredPackages(): PackageItem[] {
   const raw = localStorage.getItem(PACKAGES_KEY);
@@ -16,20 +15,6 @@ export function getStoredPackages(): PackageItem[] {
 
 export function savePackages(items: PackageItem[]) {
   localStorage.setItem(PACKAGES_KEY, JSON.stringify(items));
-}
-
-export function getStoredUsers(): User[] {
-  const raw = localStorage.getItem(USERS_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as User[];
-  } catch {
-    return [];
-  }
-}
-
-export function saveUsers(users: User[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
 export function getStoredSession(): User | null {
@@ -49,3 +34,4 @@ export function saveSession(user: User) {
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
 }
+

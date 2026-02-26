@@ -1,23 +1,19 @@
-export type UserRole = "student" | "staff";
+export type UserTipo = "aluno" | "funcionario";
 
 export type User = {
-  username: string;
-  password: string;
-  role: UserRole;
-  name: string;
+  id: string;
+  nome: string;
+  ra: string;
+  tipo: UserTipo;
 };
 
-export type PackageStatus = "pending" | "available" | "collected";
+export type PackageStatus = "em_separacao" | "disponivel" | "entregue";
 
 export type PackageItem = {
   id: string;
-  studentName: string;
-  code: string;
-  protocol?: string; // número de protocolo
-  description?: string;
+  codigo: string;
+  aluno: string;
+  ra: string;
+  dataChegada: string;
   status: PackageStatus;
-  createdAt: string;
-  availableAt?: string;
-  collectedAt?: string;
-  collectedBy?: string; // nome de quem retirou
 };
