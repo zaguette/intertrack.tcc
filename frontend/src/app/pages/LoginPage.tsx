@@ -42,23 +42,19 @@ export function LoginPage() {
   return (
     <div className="relative min-h-screen overflow-hidden flex items-center justify-center p-4">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800" />
       <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(45deg, white 0, white 1px, transparent 0, transparent 50%)",
-          backgroundSize: "20px 20px",
-        }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: "url('/campus.png')" }}
       />
+      <div className="absolute inset-0 bg-blue-950/60" />
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-sm">
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo */}
           <div className="mb-6 flex flex-col items-center gap-3">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-900 shadow-lg ring-4 ring-blue-200">
-              <span className="text-2xl font-black text-white">A</span>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-orange-500 shadow-lg ring-4 ring-orange-200">
+              <img src="/logounasp.png" alt="UNASP Logo" className="h-16 w-16 object-contain" />
             </div>
             <div className="text-center">
               <h1 className="text-xl font-black tracking-wide text-blue-900 uppercase">UNASP</h1>
