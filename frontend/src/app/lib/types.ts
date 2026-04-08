@@ -15,5 +15,10 @@ export type PackageItem = {
   aluno: string;
   ra: string;
   dataChegada: string;
+  dataRetirada?: string;
+  responsavelRegistro?: string;
+  collectedAt?: string;
+  collectedBy?: string;
+  collectedByRa?: string;
   status: PackageStatus;
 };

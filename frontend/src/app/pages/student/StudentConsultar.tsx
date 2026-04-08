@@ -2,7 +2,7 @@ import { ArrowLeft, Calendar, Package, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "../../components/StatusBadge";
-import { StudentHeader } from "../../components/StudentHeader";
+import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
 import { PackageStatus } from "../../lib/types";
 
@@ -21,7 +21,6 @@ export function StudentConsultar() {
   const [statusFilter, setStatusFilter] = useState<PackageStatus | "todos">("todos");
 
   const myPackages = packages.filter((p) => p.ra === user?.ra);
-  const disponivel = myPackages.filter((p) => p.status === "disponivel").length;
 
   const filtered = useMemo(() => {
     return myPackages.filter((p) => {
@@ -42,10 +41,8 @@ export function StudentConsultar() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <StudentHeader availableCount={disponivel} />
-
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <StudentLayout>
+      <div className="mx-auto max-w-7xl px-0 py-0">
         {/* Back button + Title */}
         <div className="mb-6 flex items-center gap-3">
           <button
@@ -53,7 +50,7 @@ export function StudentConsultar() {
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
           >
             <ArrowLeft size={16} />
-            Voltar ao Dashboard
+            Voltar à Página Inicial
           </button>
         </div>
         <h1 className="mb-6 text-2xl font-bold text-gray-900">Consultar Encomendas</h1>
@@ -130,7 +127,7 @@ export function StudentConsultar() {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </StudentLayout>
   );
 }

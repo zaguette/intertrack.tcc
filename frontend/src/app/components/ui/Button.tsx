@@ -16,9 +16,9 @@ const variants: Record<ButtonVariant, string> = {
   secondary:
     "bg-unasp-navy text-white hover:bg-slate-900 focus-visible:outline-slate-900",
   outline:
-    "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-slate-300",
+    "border border-[var(--app-border)] bg-[var(--panel-bg)] text-[var(--app-text)] hover:bg-black/5 focus-visible:outline-slate-300",
   ghost:
-    "bg-transparent text-slate-600 hover:bg-slate-100 focus-visible:outline-slate-300",
+    "bg-transparent text-[var(--muted-text)] hover:bg-black/5 focus-visible:outline-slate-300",
   danger:
     "bg-rose-500 text-white hover:bg-rose-600 focus-visible:outline-rose-500",
 };

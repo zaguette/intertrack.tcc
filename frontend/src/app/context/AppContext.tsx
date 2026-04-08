@@ -12,20 +12,37 @@ import { PackageItem, User } from "../lib/types";
 interface AppContextType {
   user: User | null;
   packages: PackageItem[];
+  theme: "light" | "dark";
   login: (ra: string, password: string) => User | null;
   logout: () => void;
   addPackage: (pkg: PackageItem) => void;
   updatePackage: (id: string, updates: Partial<PackageItem>) => void;
   deletePackage: (id: string) => void;
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
+const THEME_KEY = "intertrack_theme_v1";
+
+function applyTheme(theme: "light" | "dark") {
+  if (typeof document === "undefined") return;
+
+  const root = document.documentElement;
+  root.dataset.theme = theme;
+  root.style.colorScheme = theme;
+}
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [packages, setPackages] = useState<PackageItem[]>([]);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
+    const storedTheme = localStorage.getItem(THEME_KEY) as "light" | "dark" | null;
+    const nextTheme = storedTheme === "dark" ? "dark" : "light";
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+
     const storedSession = getStoredSession();
     setUser(storedSession);
 
@@ -37,6 +54,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setPackages(storedPackages);
     }
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem(THEME_KEY, theme);
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     if (packages.length > 0) {
@@ -71,9 +93,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPackages((prev) => prev.filter((p) => p.id !== id));
   }
 
+  function toggleTheme() {
+    setTheme((current) => (current === "light" ? "dark" : "light"));
+  }
+
   return (
     <AppContext.Provider
-      value={{ user, packages, login, logout, addPackage, updatePackage, deletePackage }}
+      value={{
+        user,
+        packages,
+        theme,
+        login,
+        logout,
+        addPackage,
+        updatePackage,
+        deletePackage,
+        toggleTheme,
+      }}
     >
       {children}
     </AppContext.Provider>

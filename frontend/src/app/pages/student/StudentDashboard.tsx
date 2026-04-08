@@ -2,7 +2,7 @@ import { Calendar, Package, PackageCheck, PackageOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "../../components/StatCard";
 import { StatusBadge } from "../../components/StatusBadge";
-import { StudentHeader } from "../../components/StudentHeader";
+import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
 
 export function StudentDashboard() {
@@ -22,21 +22,15 @@ export function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <StudentHeader availableCount={disponivel} />
-
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* Greeting */}
+    <StudentLayout>
+      <div className="mx-auto max-w-7xl px-0 py-0">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Olá, {user?.nome}!
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900">Ola, {user?.nome}!</h1>
           <p className="mt-1 text-sm text-gray-500">
             Acompanhe suas encomendas pelo Correio Interno do UNASP
           </p>
         </div>
 
-        {/* Stats */}
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <StatCard
             title="Total de Encomendas"
@@ -45,28 +39,27 @@ export function StudentDashboard() {
             iconBg="bg-blue-100"
           />
           <StatCard
-            title="Disponíveis"
+            title="Disponiveis"
             value={disponivel}
             icon={<PackageCheck size={22} className="text-green-700" />}
             iconBg="bg-green-100"
           />
           <StatCard
-            title="Em Separação"
+            title="Em Separacao"
             value={emSeparacao}
             icon={<PackageOpen size={22} className="text-yellow-700" />}
             iconBg="bg-yellow-100"
           />
         </div>
 
-        {/* Recent packages */}
         <div className="rounded-2xl bg-white border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
             <h2 className="text-base font-semibold text-gray-900">Minhas Encomendas</h2>
             <button
-              onClick={() => navigate("/aluno/consultar")}
+              onClick={() => navigate("/aluno/historico")}
               className="text-sm font-medium text-blue-600 transition hover:text-blue-800"
             >
-              Ver todas →
+              Ver todas -&gt;
             </button>
           </div>
 
@@ -77,7 +70,7 @@ export function StudentDashboard() {
               </div>
               <h3 className="text-base font-semibold text-gray-700">Nenhuma encomenda</h3>
               <p className="mt-1 text-sm text-gray-400">
-                Você não possui encomendas registradas no momento.
+                Voce nao possui encomendas registradas no momento.
               </p>
             </div>
           ) : (
@@ -90,7 +83,7 @@ export function StudentDashboard() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                        Código
+                        Codigo
                       </p>
                       <p className="mt-0.5 truncate text-base font-bold text-gray-900">
                         {pkg.codigo}
@@ -110,7 +103,7 @@ export function StudentDashboard() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </StudentLayout>
   );
 }
