@@ -28,6 +28,10 @@ export const mockPackages: PackageItem[] = [
     aluno: "João Silva",
     ra: "123456",
     dataChegada: "2024-02-15",
+    dataRetirada: "2024-02-18",
+    responsavelRegistro: "Maria Santos",
+    collectedAt: "2024-02-18T14:35:00.000Z",
+    collectedBy: "Maria Santos",
     status: "entregue",
   },
   {
@@ -52,6 +56,10 @@ export const mockPackages: PackageItem[] = [
     aluno: "Ana Santos",
     ra: "345678",
     dataChegada: "2024-02-19",
+    dataRetirada: "2024-02-21",
+    responsavelRegistro: "Maria Santos",
+    collectedAt: "2024-02-21T16:10:00.000Z",
+    collectedBy: "Maria Santos",
     status: "entregue",
   },
 ];

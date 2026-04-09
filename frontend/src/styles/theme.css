@@ -1,8 +1,25 @@
 :root {
+  color-scheme: light;
   --unasp-orange: #FF6B35;
   --unasp-navy: #003366;
-  --card-bg: #ffffff;
-  --card-border: rgba(148, 163, 184, 0.25);
+  --app-bg: #f6f8fc;
+  --panel-bg: #ffffff;
+  --app-text: #0f172a;
+  --muted-text: #64748b;
+  --app-border: rgba(148, 163, 184, 0.24);
+  --accent-bg: rgba(255, 107, 53, 0.12);
+  --accent-text: #c2410c;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0b1120;
+  --panel-bg: #111827;
+  --app-text: #e5e7eb;
+  --muted-text: #94a3b8;
+  --app-border: rgba(148, 163, 184, 0.18);
+  --accent-bg: rgba(255, 107, 53, 0.16);
+  --accent-text: #fb923c;
 }
 
 .bg-unasp-orange {
@@ -19,4 +36,61 @@
 
 .text-unasp-navy {
   color: var(--unasp-navy);
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+:root[data-theme="dark"] .bg-white {
+  background-color: var(--panel-bg) !important;
+}
+
+:root[data-theme="dark"] .bg-gray-50 {
+  background-color: #0f172a !important;
+}
+
+:root[data-theme="dark"] .bg-gray-100 {
+  background-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+:root[data-theme="dark"] .border-gray-100,
+:root[data-theme="dark"] .border-gray-200,
+:root[data-theme="dark"] .border-gray-300 {
+  border-color: var(--app-border) !important;
+}
+
+:root[data-theme="dark"] .text-gray-900,
+:root[data-theme="dark"] .text-gray-800,
+:root[data-theme="dark"] .text-gray-700 {
+  color: var(--app-text) !important;
+}
+
+:root[data-theme="dark"] .text-gray-600,
+:root[data-theme="dark"] .text-gray-500,
+:root[data-theme="dark"] .text-gray-400 {
+  color: var(--muted-text) !important;
+}
+
+:root[data-theme="dark"] .hover\:bg-gray-50:hover,
+:root[data-theme="dark"] .hover\:bg-gray-100:hover {
+  background-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+:root[data-theme="dark"] select {
+  background-color: #0f172a !important;
+  color: #e5e7eb !important;
+  border-color: var(--app-border) !important;
+}
+
+:root[data-theme="dark"] option {
+  background-color: #0f172a;
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] option:checked,
+:root[data-theme="dark"] option:hover {
+  background-color: #1e293b;
+  color: #ffffff;
 }

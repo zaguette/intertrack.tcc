@@ -246,7 +246,7 @@ export default function StaffView({
         </Card>
 
         <Card className="grid gap-4">
-          <h2 className="text-lg font-semibold text-slate-900">Dashboard</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Página Inicial</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase text-slate-500">Aguardando</p>

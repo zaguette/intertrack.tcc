@@ -13,14 +13,13 @@ const statusOptions: { value: PackageStatus; label: string }[] = [
 ];
 
 export function StaffCadastrar() {
-  const { addPackage } = useApp();
+  const { addPackage, packages } = useApp();
   const navigate = useNavigate();
 
   const today = new Date().toISOString().split("T")[0];
 
   const [form, setForm] = useState({
     aluno: "",
-    ra: "",
     codigo: "",
     dataChegada: today,
     status: "em_separacao" as PackageStatus,
@@ -33,14 +32,19 @@ export function StaffCadastrar() {
 
   function handleSubmit() {
     if (!form.aluno.trim()) return toast.error("Informe o nome do aluno.");
-    if (!form.ra.trim()) return toast.error("Informe o RA do aluno.");
     if (!form.codigo.trim()) return toast.error("Informe o código da encomenda.");
     if (!form.dataChegada) return toast.error("Informe a data de chegada.");
+
+    const normalizedAluno = form.aluno.trim().toLowerCase();
+    const knownStudent = packages.find(
+      (item) => item.aluno.trim().toLowerCase() === normalizedAluno && item.ra !== "nao_informado"
+    );
+    const resolvedRa = knownStudent?.ra ?? "nao_informado";
 
     const newPkg: PackageItem = {
       id: crypto.randomUUID(),
       aluno: form.aluno.trim(),
-      ra: form.ra.trim(),
+      ra: resolvedRa,
       codigo: form.codigo.trim(),
       dataChegada: form.dataChegada,
       status: form.status,
@@ -50,9 +54,13 @@ export function StaffCadastrar() {
     toast.success("Encomenda cadastrada com sucesso!");
 
     // Reset form
-    setForm({ aluno: "", ra: "", codigo: "", dataChegada: today, status: "em_separacao" });
+    setForm({ aluno: "", codigo: "", dataChegada: today, status: "em_separacao" });
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
+
+    if (resolvedRa === "nao_informado") {
+      toast.info("RA não encontrado no histórico. Encomenda salva com RA não informado.");
+    }
   }
 
   return (
@@ -64,7 +72,7 @@ export function StaffCadastrar() {
           className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
         >
           <ArrowLeft size={16} />
-          Voltar ao Dashboard
+          Voltar à Página Inicial
         </button>
       </div>
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Cadastrar Nova Encomenda</h1>
@@ -89,20 +97,6 @@ export function StaffCadastrar() {
               placeholder="Ex: João Silva"
               value={form.aluno}
               onChange={(e) => handleChange("aluno", e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-            />
-          </div>
-
-          {/* RA */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              RA (Registro Acadêmico) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: 123456"
-              value={form.ra}
-              onChange={(e) => handleChange("ra", e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
             />
           </div>
@@ -154,18 +148,12 @@ export function StaffCadastrar() {
         </div>
 
         {/* Buttons */}
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row-reverse">
+        <div className="mt-6">
           <button
             onClick={handleSubmit}
-            className="flex-1 rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Cadastrar Encomenda
-          </button>
-          <button
-            onClick={() => navigate("/funcionario")}
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 sm:flex-none sm:px-6"
-          >
-            Cancelar
           </button>
         </div>
       </div>

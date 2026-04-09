@@ -8,9 +8,9 @@ type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variants: Record<BadgeVariant, string> = {
-  pending: "bg-amber-100 text-amber-700",
-  available: "bg-emerald-100 text-emerald-700",
-  collected: "bg-slate-200 text-slate-600",
+  pending: "bg-amber-500/15 text-amber-600",
+  available: "bg-emerald-500/15 text-emerald-600",
+  collected: "bg-slate-500/15 text-[var(--muted-text)]",
 };
 
 export function Badge({ variant = "pending", className, ...props }: BadgeProps) {
