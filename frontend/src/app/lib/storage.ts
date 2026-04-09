@@ -1,7 +1,7 @@
 import { PackageItem, User } from "./types";
 
-const PACKAGES_KEY = "intertrack_packages_v2";
-const SESSION_KEY = "intertrack_session_v2";
+export const PACKAGES_KEY = "intertrack_packages_v2";
+export const SESSION_KEY = "intertrack_session_v2";
 
 export function getStoredPackages(): PackageItem[] {
   const raw = localStorage.getItem(PACKAGES_KEY);

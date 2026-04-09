@@ -7,7 +7,6 @@ import { useApp } from "../../context/AppContext";
 import { PackageStatus } from "../../lib/types";
 
 const statusOptions: { value: PackageStatus; label: string }[] = [
-  { value: "em_separacao", label: "Em Separacao" },
   { value: "disponivel", label: "Disponivel" },
   { value: "entregue", label: "Entregue" },
 ];
@@ -54,7 +53,7 @@ export function StaffGerenciar() {
           className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 shadow-sm transition hover:bg-gray-50"
         >
           <ArrowLeft size={16} />
-          Voltar a Pagina Inicial
+          Voltar à Página Inicial
         </button>
       </div>
 
@@ -127,9 +126,9 @@ export function StaffGerenciar() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
-        <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-600" />
-        <p className="text-sm text-blue-700">
+      <div className="mt-5 flex items-start gap-3 rounded-xl border border-[var(--app-border)] bg-[var(--panel-bg)] p-4">
+        <Info size={16} className="mt-0.5 flex-shrink-0 text-[var(--accent-text)]" />
+        <p className="text-sm text-[var(--muted-text)]">
           Esta tela e apenas para filtro e consulta. As acoes de editar status e excluir ficam na Pagina Inicial.
         </p>
       </div>

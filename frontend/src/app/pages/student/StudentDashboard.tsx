@@ -1,4 +1,4 @@
-import { Calendar, Package, PackageCheck, PackageOpen } from "lucide-react";
+import { Calendar, Package, PackageCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "../../components/StatCard";
 import { StatusBadge } from "../../components/StatusBadge";
@@ -12,7 +12,7 @@ export function StudentDashboard() {
   const myPackages = packages.filter((p) => p.ra === user?.ra);
   const total = myPackages.length;
   const disponivel = myPackages.filter((p) => p.status === "disponivel").length;
-  const emSeparacao = myPackages.filter((p) => p.status === "em_separacao").length;
+  const entregues = myPackages.filter((p) => p.status === "entregue").length;
 
   const recent = myPackages.slice(0, 6);
 
@@ -45,10 +45,10 @@ export function StudentDashboard() {
             iconBg="bg-green-100"
           />
           <StatCard
-            title="Em Separacao"
-            value={emSeparacao}
-            icon={<PackageOpen size={22} className="text-yellow-700" />}
-            iconBg="bg-yellow-100"
+            title="Entregues"
+            value={entregues}
+            icon={<Package size={22} className="text-blue-700" />}
+            iconBg="bg-blue-100"
           />
         </div>
 

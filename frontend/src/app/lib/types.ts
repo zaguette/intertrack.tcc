@@ -7,7 +7,7 @@ export type User = {
   tipo: UserTipo;
 };
 
-export type PackageStatus = "em_separacao" | "disponivel" | "entregue";
+export type PackageStatus = "disponivel" | "entregue";
 
 export type PackageItem = {
   id: string;
