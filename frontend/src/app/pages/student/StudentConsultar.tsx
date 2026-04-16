@@ -8,7 +8,6 @@ import { PackageStatus } from "../../lib/types";
 
 const statusOptions: { value: PackageStatus | "todos"; label: string }[] = [
   { value: "todos", label: "Todos os status" },
-  { value: "em_separacao", label: "Em Separação" },
   { value: "disponivel", label: "Disponível" },
   { value: "entregue", label: "Entregue" },
 ];

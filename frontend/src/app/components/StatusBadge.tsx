@@ -6,10 +6,6 @@ interface StatusBadgeProps {
 }
 
 const config: Record<PackageStatus, { label: string; className: string }> = {
-  em_separacao: {
-    label: "Em Separação",
-    className: "bg-yellow-100 text-yellow-800 border border-yellow-200",
-  },
   disponivel: {
     label: "Disponível",
     className: "bg-green-100 text-green-800 border border-green-200",

@@ -5,10 +5,15 @@ import { toast } from "sonner";
 import { useApp } from "../context/AppContext";
 
 export function LoginPage() {
-  const { login, user } = useApp();
+  const { login, register, user } = useApp();
   const navigate = useNavigate();
 
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const isRegister = mode === "register";
+
+  const [fullName, setFullName] = useState("");
   const [ra, setRa] = useState("");
+  const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -21,7 +26,7 @@ export function LoginPage() {
 
   function handleLogin() {
     if (!ra.trim()) {
-      toast.error("Informe seu RA ou usuário.");
+      toast.error("Informe seu RA.");
       return;
     }
     if (!password.trim()) {
@@ -31,12 +36,64 @@ export function LoginPage() {
 
     const loggedUser = login(ra, password);
     if (!loggedUser) {
-      toast.error("Credenciais inválidas. Verifique seu RA/usuário.");
+      toast.error("Credenciais inválidas. Verifique seu RA e senha.");
       return;
     }
 
     toast.success(`Bem-vindo(a), ${loggedUser.nome}!`);
     navigate(loggedUser.tipo === "aluno" ? "/aluno" : "/funcionario", { replace: true });
+  }
+
+  function handleRegister() {
+    if (!fullName.trim()) {
+      toast.error("Informe seu nome completo.");
+      return;
+    }
+    if (!ra.trim()) {
+      toast.error("Informe seu RA.");
+      return;
+    }
+    if (!contact.trim()) {
+      toast.error("Informe seu telefone ou e-mail.");
+      return;
+    }
+    if (!password.trim()) {
+      toast.error("Informe sua senha.");
+      return;
+    }
+
+    const result = register({
+      nome: fullName,
+      ra,
+      contato: contact,
+      senha: password,
+    });
+
+    if (!result.ok) {
+      toast.error(result.error ?? "Não foi possível cadastrar.");
+      return;
+    }
+
+    const loggedUser = login(ra, password);
+    if (!loggedUser) {
+      toast.success("Cadastro realizado com sucesso. Faça seu login.");
+      setMode("login");
+      return;
+    }
+
+    toast.success(`Cadastro realizado. Bem-vindo(a), ${loggedUser.nome}!`);
+    navigate("/aluno", { replace: true });
+  }
+
+  function switchMode(nextMode: "login" | "register") {
+    setMode(nextMode);
+    setShowPassword(false);
+    setPassword("");
+
+    if (nextMode === "login") {
+      setFullName("");
+      setContact("");
+    }
   }
 
   return (
@@ -53,8 +110,8 @@ export function LoginPage() {
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo */}
           <div className="mb-6 flex flex-col items-center gap-3">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-orange-500 shadow-lg ring-4 ring-orange-200">
-              <img src="/logounasp.png" alt="UNASP Logo" className="h-16 w-16 object-contain" />
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-500 shadow-lg ring-4 ring-orange-200">
+              <img src="/logounasp.png" alt="UNASP Logo" className="h-[5.5rem] w-[5.5rem] object-contain" />
             </div>
             <div className="text-center">
               <h1 className="text-xl font-black tracking-wide text-blue-900 uppercase">UNASP</h1>
@@ -63,25 +120,59 @@ export function LoginPage() {
           </div>
 
           <div className="mb-6 text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Bem-vindo</h2>
-            <p className="mt-1 text-sm text-gray-500">Sistema de Correio Interno</p>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isRegister ? "Criar cadastro" : "Bem-vindo"}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {isRegister ? "Cadastre-se para acessar como aluno" : "Sistema de Correio Interno"}
+            </p>
           </div>
 
           <div className="space-y-4">
+            {isRegister && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  Nome completo
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: João da Silva"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                />
+              </div>
+            )}
+
             {/* RA / Usuário */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                RA / Usuário
+                RA
               </label>
               <input
                 type="text"
-                placeholder="Ex: 123456 ou admin"
+                placeholder="Ex: 123456"
                 value={ra}
                 onChange={(e) => setRa(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                onKeyDown={(e) => e.key === "Enter" && (isRegister ? handleRegister() : handleLogin())}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
               />
             </div>
+
+            {isRegister && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                  Telefone ou e-mail
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: (19) 99999-9999 ou aluno@email.com"
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                />
+              </div>
+            )}
 
             {/* Senha */}
             <div>
@@ -92,7 +183,7 @@ export function LoginPage() {
                   placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                  onKeyDown={(e) => e.key === "Enter" && (isRegister ? handleRegister() : handleLogin())}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
                 />
                 <button
@@ -108,11 +199,29 @@ export function LoginPage() {
 
             {/* Submit */}
             <button
-              onClick={handleLogin}
+              onClick={isRegister ? handleRegister : handleLogin}
               className="w-full rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              Entrar
+              {isRegister ? "Cadastrar" : "Entrar"}
             </button>
+
+            {isRegister ? (
+              <button
+                type="button"
+                onClick={() => switchMode("login")}
+                className="w-full text-sm font-medium text-blue-700 hover:text-blue-900"
+              >
+                Já tem conta? Entrar
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => switchMode("register")}
+                className="w-full text-sm font-medium text-blue-700 hover:text-blue-900"
+              >
+                Cadastrar
+              </button>
+            )}
           </div>
 
           {/* Credenciais de teste */}
@@ -126,7 +235,10 @@ export function LoginPage() {
                 <span className="font-semibold">Aluno:</span> RA: <code className="rounded bg-blue-100 px-1">123456</code> | Senha: qualquer
               </p>
               <p>
-                <span className="font-semibold">Funcionário:</span> Usuário: <code className="rounded bg-blue-100 px-1">admin</code> | Senha: qualquer
+                <span className="font-semibold">Funcionário:</span> RA: <code className="rounded bg-blue-100 px-1">999999</code> | Senha: qualquer
+              </p>
+              <p>
+                <span className="font-semibold">Novo aluno:</span> use a aba <strong>Cadastrar</strong> para criar sua conta.
               </p>
             </div>
           </div>

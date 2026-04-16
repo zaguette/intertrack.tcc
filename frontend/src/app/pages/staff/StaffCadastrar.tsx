@@ -1,30 +1,65 @@
 import { ArrowLeft, Info } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { StaffLayout } from "../../components/StaffLayout";
 import { useApp } from "../../context/AppContext";
 import { PackageItem, PackageStatus } from "../../lib/types";
 
+const DRAFT_KEY = "intertrack_staff_cadastrar_draft_v1";
+
 const statusOptions: { value: PackageStatus; label: string }[] = [
-  { value: "em_separacao", label: "Em Separação" },
   { value: "disponivel", label: "Disponível" },
   { value: "entregue", label: "Entregue" },
 ];
 
 export function StaffCadastrar() {
-  const { addPackage, packages } = useApp();
+  const { addPackage } = useApp();
   const navigate = useNavigate();
 
   const today = new Date().toISOString().split("T")[0];
 
-  const [form, setForm] = useState({
-    aluno: "",
-    codigo: "",
-    dataChegada: today,
-    status: "em_separacao" as PackageStatus,
-  });
-  const [success, setSuccess] = useState(false);
+  function getDefaultForm() {
+    return {
+      aluno: "",
+      ra: "",
+      codigo: "",
+      dataChegada: today,
+      status: "disponivel" as PackageStatus,
+    };
+  }
+
+  function getInitialForm() {
+    const fallback = getDefaultForm();
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return fallback;
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        aluno?: string;
+        ra?: string;
+        codigo?: string;
+        dataChegada?: string;
+        status?: PackageStatus;
+      };
+
+      return {
+        aluno: parsed.aluno ?? "",
+        ra: parsed.ra ?? "",
+        codigo: parsed.codigo ?? "",
+        dataChegada: parsed.dataChegada || today,
+        status: parsed.status === "entregue" ? "entregue" : "disponivel",
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  const [form, setForm] = useState(getInitialForm);
+
+  useEffect(() => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+  }, [form]);
 
   function handleChange(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -32,19 +67,14 @@ export function StaffCadastrar() {
 
   function handleSubmit() {
     if (!form.aluno.trim()) return toast.error("Informe o nome do aluno.");
+    if (!form.ra.trim()) return toast.error("Informe o RA do aluno.");
     if (!form.codigo.trim()) return toast.error("Informe o código da encomenda.");
     if (!form.dataChegada) return toast.error("Informe a data de chegada.");
-
-    const normalizedAluno = form.aluno.trim().toLowerCase();
-    const knownStudent = packages.find(
-      (item) => item.aluno.trim().toLowerCase() === normalizedAluno && item.ra !== "nao_informado"
-    );
-    const resolvedRa = knownStudent?.ra ?? "nao_informado";
 
     const newPkg: PackageItem = {
       id: crypto.randomUUID(),
       aluno: form.aluno.trim(),
-      ra: resolvedRa,
+      ra: form.ra.trim(),
       codigo: form.codigo.trim(),
       dataChegada: form.dataChegada,
       status: form.status,
@@ -54,13 +84,9 @@ export function StaffCadastrar() {
     toast.success("Encomenda cadastrada com sucesso!");
 
     // Reset form
-    setForm({ aluno: "", codigo: "", dataChegada: today, status: "em_separacao" });
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
-
-    if (resolvedRa === "nao_informado") {
-      toast.info("RA não encontrado no histórico. Encomenda salva com RA não informado.");
-    }
+    const resetForm = getDefaultForm();
+    setForm(resetForm);
+    localStorage.removeItem(DRAFT_KEY);
   }
 
   return (
@@ -77,14 +103,6 @@ export function StaffCadastrar() {
       </div>
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Cadastrar Nova Encomenda</h1>
 
-      {/* Success banner */}
-      {success && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-800">
-          <span className="text-lg">✅</span>
-          Encomenda cadastrada! O aluno será notificado quando o status for atualizado.
-        </div>
-      )}
-
       <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
         <div className="grid gap-5 sm:grid-cols-2">
           {/* Nome do Aluno */}
@@ -97,6 +115,20 @@ export function StaffCadastrar() {
               placeholder="Ex: João Silva"
               value={form.aluno}
               onChange={(e) => handleChange("aluno", e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+            />
+          </div>
+
+          {/* RA */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              RA do Aluno <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Ex: 123456"
+              value={form.ra}
+              onChange={(e) => handleChange("ra", e.target.value)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
             />
           </div>
@@ -159,9 +191,9 @@ export function StaffCadastrar() {
       </div>
 
       {/* Info box */}
-      <div className="mt-5 flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
-        <Info size={16} className="mt-0.5 flex-shrink-0 text-blue-600" />
-        <p className="text-sm text-blue-700">
+      <div className="mt-5 flex items-start gap-3 rounded-xl border border-[var(--app-border)] bg-[var(--panel-bg)] p-4">
+        <Info size={16} className="mt-0.5 flex-shrink-0 text-[var(--accent-text)]" />
+        <p className="text-sm text-[var(--muted-text)]">
           Após o cadastro, o aluno poderá visualizar sua encomenda no sistema.
           Quando o status for alterado para <strong>Disponível</strong>, o aluno
           será notificado para retirar.

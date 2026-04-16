@@ -6,9 +6,9 @@ interface UNASPLogoProps {
 
 export function UNASPLogo({ size = "md", showText = true, dark = false }: UNASPLogoProps) {
   const sizes = {
-    sm: { circle: "h-8 w-8", text: "text-xs", sub: "text-[10px]" },
-    md: { circle: "h-10 w-10", text: "text-sm", sub: "text-[11px]" },
-    lg: { circle: "h-14 w-14", text: "text-base", sub: "text-xs" },
+    sm: { circle: "h-12 w-12", image: "h-[3rem] w-[3rem]", text: "text-xs", sub: "text-[10px]" },
+    md: { circle: "h-14 w-14", image: "h-[3.5rem] w-[3.5rem]", text: "text-sm", sub: "text-[11px]" },
+    lg: { circle: "h-20 w-20", image: "h-[4.75rem] w-[4.75rem]", text: "text-base", sub: "text-xs" },
   };
 
   const s = sizes[size];
@@ -18,11 +18,9 @@ export function UNASPLogo({ size = "md", showText = true, dark = false }: UNASPL
   return (
     <div className="flex items-center gap-3">
       <div
-        className={`${s.circle} flex items-center justify-center rounded-full bg-blue-900 ring-2 ring-blue-700 flex-shrink-0`}
+        className={`${s.circle} flex items-center justify-center rounded-full bg-orange-500 ring-2 ring-orange-200 flex-shrink-0`}
       >
-        <span className="font-black text-white" style={{ fontSize: size === "lg" ? "1.5rem" : size === "md" ? "1.1rem" : "0.85rem" }}>
-          A
-        </span>
+        <img src="/logounasp.png" alt="UNASP Logo" className={`${s.image} object-contain`} />
       </div>
       {showText && (
         <div className="flex flex-col leading-tight">

@@ -1,9 +1,34 @@
 import { PackageItem, User } from "../lib/types";
 
+type StoredUser = User & {
+  senha: string;
+  contato: string;
+};
+
+const USERS_KEY = "intertrack_users_v1";
+
 export const mockUsers: User[] = [
   { id: "1", nome: "João Silva", ra: "123456", tipo: "aluno" },
-  { id: "2", nome: "Maria Santos", ra: "admin", tipo: "funcionario" },
+  { id: "2", nome: "Maria Santos", ra: "999999", tipo: "funcionario" },
 ];
+
+function getStoredUsers(): StoredUser[] {
+  if (typeof window === "undefined") return [];
+  const raw = localStorage.getItem(USERS_KEY);
+  if (!raw) return [];
+
+  try {
+    const parsed = JSON.parse(raw) as StoredUser[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredUsers(users: StoredUser[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+}
 
 export const mockPackages: PackageItem[] = [
   {
@@ -20,7 +45,7 @@ export const mockPackages: PackageItem[] = [
     aluno: "João Silva",
     ra: "123456",
     dataChegada: "2024-02-22",
-    status: "em_separacao",
+    status: "disponivel",
   },
   {
     id: "enc-003",
@@ -48,7 +73,7 @@ export const mockPackages: PackageItem[] = [
     aluno: "Pedro Costa",
     ra: "789012",
     dataChegada: "2024-02-24",
-    status: "em_separacao",
+    status: "disponivel",
   },
   {
     id: "enc-006",
@@ -64,12 +89,74 @@ export const mockPackages: PackageItem[] = [
   },
 ];
 
-export function authenticateUser(ra: string): User | null {
-  if (ra.trim() === "123456") {
+export function authenticateUser(ra: string, password: string): User | null {
+  const normalizedRa = ra.trim();
+
+  if (normalizedRa === "123456") {
     return mockUsers[0];
   }
-  if (ra.trim().toLowerCase() === "admin") {
+  if (normalizedRa === "999999") {
     return mockUsers[1];
   }
-  return null;
+
+  const storedUsers = getStoredUsers();
+  const found = storedUsers.find((user) => user.ra === normalizedRa);
+  if (!found) return null;
+  if (found.senha !== password) return null;
+
+  return {
+    id: found.id,
+    nome: found.nome,
+    ra: found.ra,
+    tipo: found.tipo,
+  };
+
+}
+
+export function registerUser(payload: {
+  nome: string;
+  ra: string;
+  contato: string;
+  senha: string;
+}) {
+  const normalizedRa = payload.ra.trim();
+  const normalizedName = payload.nome.trim();
+  const normalizedContact = payload.contato.trim();
+
+  if (!normalizedName || !normalizedRa || !payload.senha.trim() || !normalizedContact) {
+    return { ok: false, error: "Preencha todos os campos." };
+  }
+
+  if (normalizedRa === "123456" || normalizedRa === "999999") {
+    return { ok: false, error: "Este RA/usuário já está em uso." };
+  }
+
+  const storedUsers = getStoredUsers();
+  const alreadyExists = storedUsers.some(
+    (user) => user.ra.toLowerCase() === normalizedRa.toLowerCase()
+  );
+
+  if (alreadyExists) {
+    return { ok: false, error: "Já existe um cadastro com esse RA." };
+  }
+
+  const nextUser: StoredUser = {
+    id: crypto.randomUUID(),
+    nome: normalizedName,
+    ra: normalizedRa,
+    tipo: "aluno",
+    contato: normalizedContact,
+    senha: payload.senha,
+  };
+
+  saveStoredUsers([nextUser, ...storedUsers]);
+  return {
+    ok: true,
+    user: {
+      id: nextUser.id,
+      nome: nextUser.nome,
+      ra: nextUser.ra,
+      tipo: nextUser.tipo,
+    } as User,
+  };
 }
