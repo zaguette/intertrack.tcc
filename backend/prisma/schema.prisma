@@ -24,7 +24,7 @@ model Usuario {
   notificacoes          Notificacao[]
   autorizacoesCriadas   Autorizacao[]
 
-  @@map("usuarios")
+ 
 }
 
 model Funcionario {
@@ -45,7 +45,7 @@ model Funcionario {
   historicos         HistoricoStatus[]
   auditorias         Auditoria[]
 
-  @@map("funcionarios")
+  
 }
 
 model StatusEncomenda {
@@ -56,7 +56,7 @@ model StatusEncomenda {
   encomendas         Encomenda[]
   historicos         HistoricoStatus[]
 
-  @@map("status_encomenda")
+  
 }
 
 model Remetente {
@@ -71,7 +71,7 @@ model Remetente {
 
   encomendas         Encomenda[]
 
-  @@map("remetentes")
+  
 }
 
 model NomeAlternativo {
@@ -94,7 +94,7 @@ model NomeAlternativo {
 
   autorizacoes       Autorizacao[]
 
-  @@map("nomes_alternativos")
+  
 }
 
 model Encomenda {
@@ -137,7 +137,7 @@ model Encomenda {
 
   @@index([destinatario_usuario_id])
 
-  @@map("encomendas")
+ 
 }
 
 model HistoricoStatus {
@@ -159,7 +159,7 @@ model HistoricoStatus {
 
   @@index([encomenda_id])
 
-  @@map("historico_status")
+  
 }
 
 model Notificacao {
@@ -177,7 +177,7 @@ model Notificacao {
 
   @@index([usuario_id])
 
-  @@map("notificacoes")
+  
 }
 
 model Autorizacao {
@@ -196,7 +196,7 @@ model Autorizacao {
 
   @@index([encomenda_id])
 
-  @@map("autorizacoes")
+  
 }
 
 model Auditoria {
@@ -210,7 +210,7 @@ model Auditoria {
   created_at         DateTime            @default(now())
   funcionario        Funcionario         @relation(fields: [funcionario_id], references: [id])
 
-  @@map("auditoria")
+  
 }
 
 enum CargoFuncionario {
