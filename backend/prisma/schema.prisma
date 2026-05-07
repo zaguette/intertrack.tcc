@@ -1,223 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+}
+
+model TipoUsuario {
+  id        Int       @id @default(autoincrement())
+  nomeTipo  String    @map("nome_tipo") @db.VarChar(50)
+  usuarios  Usuario[]
+
+  @@map("tiposusuario")
 }
 
 model Usuario {
-  id                    Int                  @id @default(autoincrement())
-  nome                  String               @db.VarChar(100)
-  email                 String               @unique @db.VarChar(100)
-  senha                 String               @db.VarChar(255)
-  telefone              String?              @db.VarChar(30)
-  ativo                 Boolean              @default(true)
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  senha     String   @db.VarChar(255)
+  tipoId    Int      @map("tipo_id")
+  telefone  String?  @db.VarChar(30)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  created_at            DateTime             @default(now())
-  updated_at            DateTime             @updatedAt
+  tipo                TipoUsuario      @relation(fields: [tipoId], references: [id])
+  destinatarios       Destinatario[]
+  encomendas          Encomenda[]      @relation("EncomendaFuncionario")
+  encomendasRecebidas Encomenda[]      @relation("EncomendaDestinatario")
+  notificacoes        Notificacao[]
+  auditorias          Auditoria[]
+  historicosAlterados HistoricoStatus[]
+  autorizacoesCriadas Autorizacao[]
 
-  nomesAlternativos     NomeAlternativo[]
-  encomendas            Encomenda[]
-  notificacoes          Notificacao[]
-  autorizacoesCriadas   Autorizacao[]
-
- 
+  @@map("usuario")
 }
 
-model Funcionario {
-  id                 Int                 @id @default(autoincrement())
-  nome               String              @db.VarChar(100)
-  email              String              @unique @db.VarChar(100)
-  senha              String              @db.VarChar(255)
-  telefone           String?             @db.VarChar(30)
-
-  cargo              CargoFuncionario    @default(recebimento)
-
-  ativo              Boolean             @default(true)
-
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
-
-  encomendas         Encomenda[]
-  historicos         HistoricoStatus[]
-  auditorias         Auditoria[]
-
-  
-}
-
-model StatusEncomenda {
-  id                 Int                 @id @default(autoincrement())
-  nome_status        String              @db.VarChar(50)
-  descricao          String?             @db.VarChar(255)
-
-  encomendas         Encomenda[]
-  historicos         HistoricoStatus[]
-
-  
-}
+// ---------------------------------------------------------------------------
+// REMETENTES
+// ---------------------------------------------------------------------------
 
 model Remetente {
-  id                 Int                 @id @default(autoincrement())
-  nome               String              @db.VarChar(100)
+  id        Int           @id @default(autoincrement())
+  nome      String        @db.VarChar(100)
+  tipo      TipoRemetente
+  site      String?       @db.VarChar(255)
+  createdAt DateTime      @default(now()) @map("created_at")
 
-  tipo               TipoRemetente       @default(outro)
+  encomendas Encomenda[]
 
-  site               String?             @db.VarChar(255)
-
-  created_at         DateTime            @default(now())
-
-  encomendas         Encomenda[]
-
-  
-}
-
-model NomeAlternativo {
-  id                 Int                 @id @default(autoincrement())
-
-  usuario_id         Int
-
-  nome_completo      String              @db.VarChar(150)
-
-  documento          String?             @db.VarChar(20)
-
-  parentesco         Parentesco          @default(outro)
-
-  ativo              Boolean             @default(true)
-
-  created_at         DateTime            @default(now())
-  updated_at         DateTime            @updatedAt
-
-  usuario            Usuario             @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-
-  autorizacoes       Autorizacao[]
-
-  
-}
-
-model Encomenda {
-  id                           Int                  @id @default(autoincrement())
-
-  codigo_rastreio             String?              @db.VarChar(50)
-
-  descricao                   String?              @db.VarChar(255)
-
-  destinatario_usuario_id     Int
-
-  remetente_id                Int?
-
-  funcionario_id              Int
-
-  status_atual_id             Int
-
-  data_entrega                DateTime?
-
-  observacoes                 String?              @db.Text
-
-  created_at                  DateTime             @default(now())
-  updated_at                  DateTime             @updatedAt
-
-  destinatario                Usuario              @relation(fields: [destinatario_usuario_id], references: [id])
-
-  remetente                   Remetente?           @relation(fields: [remetente_id], references: [id])
-
-  funcionario                 Funcionario          @relation(fields: [funcionario_id], references: [id])
-
-  statusAtual                 StatusEncomenda      @relation(fields: [status_atual_id], references: [id])
-
-  historicos                  HistoricoStatus[]
-
-  notificacoes                Notificacao[]
-
-  autorizacoes                Autorizacao[]
-
-  @@index([codigo_rastreio])
-
-  @@index([destinatario_usuario_id])
-
- 
-}
-
-model HistoricoStatus {
-  id                 Int                 @id @default(autoincrement())
-
-  encomenda_id       Int
-
-  status_id          Int
-
-  alterado_por       Int
-
-  data_alteracao     DateTime            @default(now())
-
-  encomenda          Encomenda           @relation(fields: [encomenda_id], references: [id], onDelete: Cascade)
-
-  status             StatusEncomenda     @relation(fields: [status_id], references: [id])
-
-  funcionario        Funcionario         @relation(fields: [alterado_por], references: [id])
-
-  @@index([encomenda_id])
-
-  
-}
-
-model Notificacao {
-  id                 Int                 @id @default(autoincrement())
-  usuario_id         Int
-  encomenda_id       Int
-  tipo               String?             @db.VarChar(20)
-  mensagem           String?             @db.VarChar(255)
-  lida               Boolean             @default(false)
-  created_at         DateTime            @default(now())
-
-  usuario            Usuario             @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
-
-  encomenda          Encomenda           @relation(fields: [encomenda_id], references: [id], onDelete: Cascade)
-
-  @@index([usuario_id])
-
-  
-}
-
-model Autorizacao {
-  id                 Int                 @id @default(autoincrement())
-  encomenda_id       Int
-  destinatario_id    Int?
-  nome_avulso        String?             @db.VarChar(150)
-  documento          String?             @db.VarChar(20)
-  autorizado_por     Int
-  validade           DateTime?
-  utilizada          Boolean             @default(false)
-  created_at         DateTime            @default(now())
-  encomenda          Encomenda           @relation(fields: [encomenda_id], references: [id], onDelete: Cascade)
-  destinatario       NomeAlternativo?    @relation(fields: [destinatario_id], references: [id])
-  autorizadoPor      Usuario             @relation(fields: [autorizado_por], references: [id])
-
-  @@index([encomenda_id])
-
-  
-}
-
-model Auditoria {
-  id                 Int                 @id @default(autoincrement())
-  funcionario_id     Int
-  entidade           String?             @db.VarChar(100)
-  entidade_id        Int?
-  acao               String?             @db.VarChar(50)
-  descricao          String?             @db.Text
-  ip_usuario         String?             @db.VarChar(45)
-  created_at         DateTime            @default(now())
-  funcionario        Funcionario         @relation(fields: [funcionario_id], references: [id])
-
-  
-}
-
-enum CargoFuncionario {
-  recebimento
-  administrador
-  porteiro
-  supervisor
+  @@map("remetentes")
 }
 
 enum TipoRemetente {
@@ -225,13 +63,141 @@ enum TipoRemetente {
   transportadora
   ecommerce
   outro
+
+  @@map("tipo_remetente")
+}
+
+// ---------------------------------------------------------------------------
+// ENCOMENDAS
+// ---------------------------------------------------------------------------
+
+model StatusEncomenda {
+  id          Int    @id @default(autoincrement())
+  nomeStatus  String @map("nome_status") @db.VarChar(50)
+  descricao   String @db.VarChar(255)
+
+  encomendas  Encomenda[]
+  historicos  HistoricoStatus[]
+
+  @@map("statusencomenda")
+}
+
+model Encomenda {
+  id                   Int       @id @default(autoincrement())
+  codigoRastreio       String?   @map("codigo_rastreio") @db.VarChar(50)
+  remetenteId          Int?      @map("remetente_id")
+  descricao            String?   @db.VarChar(255)
+  funcionarioId        Int       @map("funcionario_id")
+  destinatarioUsuarioId Int      @map("destinatario_usuario_id")
+  statusAtualId        Int       @map("status_atual_id")
+  dataEntrega          DateTime? @map("data_entrega")
+  observacoes          String?   @db.Text
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  remetente   Remetente?      @relation(fields: [remetenteId], references: [id])
+  funcionario Usuario         @relation("EncomendaFuncionario", fields: [funcionarioId], references: [id])
+  destinatario Usuario        @relation("EncomendaDestinatario", fields: [destinatarioUsuarioId], references: [id])
+  statusAtual StatusEncomenda @relation(fields: [statusAtualId], references: [id])
+
+  historicos   HistoricoStatus[]
+  autorizacoes Autorizacao[]
+
+  @@map("encomenda")
+}
+
+model HistoricoStatus {
+  id            Int      @id @default(autoincrement())
+  encomendaId   Int      @map("encomenda_id")
+  statusId      Int      @map("status_id")
+  alteradoPorId Int      @map("alterado_por")
+  dataAlteracao DateTime @default(now()) @map("data_alteracao")
+
+  encomenda   Encomenda       @relation(fields: [encomendaId], references: [id])
+  status      StatusEncomenda @relation(fields: [statusId], references: [id])
+  alteradoPor Usuario         @relation(fields: [alteradoPorId], references: [id])
+
+  @@map("historicocostatus")
+}
+
+// ---------------------------------------------------------------------------
+// DESTINATÁRIOS E AUTORIZAÇÕES
+// ---------------------------------------------------------------------------
+
+model Destinatario {
+  id           Int        @id @default(autoincrement())
+  usuarioId    Int        @map("usuario_id")
+  nomeCompleto String     @map("nome_completo") @db.VarChar(150)
+  documento    String?    @db.VarChar(20)
+  parentesco   Parentesco
+  ativo        Boolean    @default(true)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  autorizacoes Autorizacao[]
+
+  @@map("destinatarios")
 }
 
 enum Parentesco {
+  proprio
   pai
   mae
   irmao
   irma
   responsavel
   outro
+
+  @@map("parentesco")
+}
+
+model Autorizacao {
+  id             Int       @id @default(autoincrement())
+  encomendaId    Int       @map("encomenda_id")
+  destinatarioId Int?      @map("destinatario_id")  // nulo se for nome avulso
+  nomeAvulso     String?   @map("nome_avulso") @db.VarChar(150)
+  documento      String?   @db.VarChar(20)
+  autorizadoPorId Int      @map("autorizado_por")
+  validade       DateTime?
+  utilizada      Boolean   @default(false)
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  encomenda    Encomenda    @relation(fields: [encomendaId], references: [id])
+  destinatario Destinatario? @relation(fields: [destinatarioId], references: [id])
+  autorizadoPor Usuario      @relation(fields: [autorizadoPorId], references: [id])
+
+  @@map("autorizacoes")
+}
+
+// ---------------------------------------------------------------------------
+// NOTIFICAÇÕES E AUDITORIA
+// ---------------------------------------------------------------------------
+
+model Notificacao {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @map("usuario_id")
+  tipo      String   @db.VarChar(20)
+  mensagem  String   @db.VarChar(255)
+  lida      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("notificacao")
+}
+
+model Auditoria {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  entidade   String   @db.VarChar(100)
+  entidadeId Int      @map("entidade_id")
+  acao       String   @db.VarChar(50)
+  descricao  String?  @db.Text
+  ipUsuario  String?  @map("ip_usuario") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("auditoria")
 }
