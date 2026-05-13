@@ -1,11 +1,8 @@
 
-import prisma from '../../prisma.client.js';
-
-import { getPrisma } from '../../prisma.client.js';
+import prisma from '../prisma/prisma.client.js';
 
 
 export const criarEncomenda = async (dados, funcionario_id) => {
-  const prisma = await getPrisma();
   const {
     codigo_rastreio,
     descricao,
@@ -42,7 +39,6 @@ export const criarEncomenda = async (dados, funcionario_id) => {
 };
 
 export const listarEncomendas = async (busca) => {
-  const prisma = await getPrisma();
   return await prisma.encomenda.findMany({
     where: busca
       ? {
@@ -81,7 +77,6 @@ export const listarEncomendas = async (busca) => {
 };
 
 export const buscarEncomendaPorId = async (id) => {
-
   return await prisma.encomenda.findUnique({
     where: {
       id: Number(id)
