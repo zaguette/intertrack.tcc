@@ -1,4 +1,3 @@
-require('dotenv').config();
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -22,7 +21,7 @@ app.use('/encomendas', encomendaRoutes);
 
 // Rota teste
 app.get('/', (req, res) => {
-  res.json({ mensagem: "Intertrack API online! 🚀" });
+  res.json({ mensagem: 'Intertrack API online! 🚀' });
 });
 
 app.listen(PORT, () => {

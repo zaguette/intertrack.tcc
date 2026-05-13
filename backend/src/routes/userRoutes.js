@@ -3,9 +3,10 @@ import { userController } from '../controllers/userController.js';
 
 const router = express.Router();
 
-// Rotas de Usuário
-router.get('/', userController.listAll);
+// Registro
 router.post('/register', userController.create);
-router.post('/nomes', userController.addDeliveryName);
+
+// Login
+router.post('/login', userController.login);
 
 export default router;
