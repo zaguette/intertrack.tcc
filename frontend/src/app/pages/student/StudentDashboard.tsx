@@ -25,7 +25,7 @@ export function StudentDashboard() {
     <StudentLayout>
       <div className="mx-auto max-w-7xl px-0 py-0">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Ola, {user?.nome}!</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Olá, {user?.nome}!</h1>
           <p className="mt-1 text-sm text-gray-500">
             Acompanhe suas encomendas pelo Correio Interno do UNASP
           </p>

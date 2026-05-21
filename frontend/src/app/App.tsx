@@ -6,7 +6,7 @@ import { router } from "./routes";
 export default function App() {
   return (
     <AppProvider>
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" duration={3000} />
       <RouterProvider router={router} />
     </AppProvider>
   );
