@@ -1,3 +1,6 @@
+
+export {};
+
 import { getPrisma } from '../../prisma.client.js';
 
 export const criar = async (dados) => {
@@ -6,3 +9,4 @@ export const criar = async (dados) => {
     data: dados
   });
 };
+
