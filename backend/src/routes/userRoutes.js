@@ -1,11 +1,13 @@
-import express from 'express';
-import { userController } from '../controllers/userController.js';
+// src/routes/userRoutes.js
 
-const router = express.Router();
+import { Router } from 'express';
 
-// Rotas de Usuário
-router.get('/', userController.listAll);
-router.post('/register', userController.create);
-router.post('/nomes', userController.addDeliveryName);
+import {
+  criarUsuario
+} from '../controllers/userController.js';
+
+const router = Router();
+
+router.post('/', criarUsuario);
 
 export default router;
