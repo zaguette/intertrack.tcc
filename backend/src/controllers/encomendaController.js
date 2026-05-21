@@ -1,60 +1,94 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import {
+  criarEncomenda,
+  listarEncomendas,
+  buscarEncomendaPorId,
+  atualizarStatusEncomenda,
+  deletarEncomenda
+} from '../services/encomendas.services.js';
 
 export const encomendaController = {
-    // Registrar nova encomenda + Histórico (Auditoria)
-    async create(req, res) {
-        const { codigo_rastreio, descricao, nome_entrega_id, status_atual_id, observacoes } = req.body;
-        const funcionario_id = req.user.id; // Pegamos o ID do token de quem está logado
 
-        try {
-            const resultado = await prisma.$transaction(async (tx) => {
-                const encomenda = await tx.encomenda.create({
-                    data: {
-                        codigo_rastreio,
-                        descricao,
-                        nome_entrega_id: Number(nome_entrega_id),
-                        funcionario_id: Number(funcionario_id),
-                        status_atual_id: Number(status_atual_id),
-                        observacoes
-                    }
-                });
+  async create(req, res) {
+    try {
+      const funcionario_id = req.user.id;
 
-                await tx.historicoStatus.create({
-                    data: {
-                        encomenda_id: encomenda.id,
-                        status_id: Number(status_atual_id),
-                        alterado_por: Number(funcionario_id)
-                    }
-                });
+      const resultado = await criarEncomenda(req.body, funcionario_id);
 
-                return encomenda;
-            });
-            res.status(201).json(resultado);
-        } catch (error) {
-            res.status(400).json({ erro: "Erro ao registrar encomenda." });
-        }
-    },
+      res.status(201).json(resultado);
 
-    // Busca avançada (Nome do aluno, código ou status)
-    async list(req, res) {
-        const { busca } = req.query;
-        try {
-            const encomendas = await prisma.encomenda.findMany({
-                where: busca ? {
-                    OR: [
-                        { codigo_rastreio: { contains: busca } },
-                        { nomeEntrega: { nome_completo: { contains: busca } } }
-                    ]
-                } : {},
-                include: {
-                    statusAtual: true,
-                    nomeEntrega: { select: { nome_completo: true } }
-                }
-            });
-            res.json(encomendas);
-        } catch (error) {
-            res.status(500).json({ erro: "Erro ao buscar encomendas." });
-        }
+    } catch (error) {
+      res.status(500).json({ erro: error.message });
     }
+  },
+
+  async list(req, res) {
+    try {
+      const { busca } = req.query;
+
+      const encomendas = await listarEncomendas(busca);
+
+      res.json(encomendas);
+
+    } catch (error) {
+      res.status(500).json({ erro: error.message });
+    }
+  },
+
+  async getById(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      const encomenda = await buscarEncomendaPorId(id);
+
+      if (!encomenda) {
+        return res.status(404).json({
+          erro: 'Encomenda não encontrada'
+        });
+      }
+
+      res.json(encomenda);
+
+    } catch (error) {
+      res.status(500).json({ erro: error.message });
+    }
+  },
+
+  async updateStatus(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      const funcionario_id = req.user.id;
+
+      const { status_atual_id } = req.body;
+
+      const encomenda = await atualizarStatusEncomenda(
+        id,
+        status_atual_id,
+        funcionario_id
+      );
+
+      res.json(encomenda);
+
+    } catch (error) {
+      res.status(500).json({ erro: error.message });
+    }
+  },
+
+  async delete(req, res) {
+    try {
+
+      const { id } = req.params;
+
+      await deletarEncomenda(id);
+
+      res.json({
+        mensagem: 'Encomenda deletada com sucesso'
+      });
+
+    } catch (error) {
+      res.status(500).json({ erro: error.message });
+    }
+  }
 };
