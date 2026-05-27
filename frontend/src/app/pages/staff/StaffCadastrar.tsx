@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { StaffLayout } from "../../components/StaffLayout";
+import { BrazilianDatePicker } from "../../components/ui/BrazilianDatePicker";
 import { useApp } from "../../context/AppContext";
 import { PackageItem, PackageStatus } from "../../lib/types";
 
@@ -13,13 +14,21 @@ const statusOptions: { value: PackageStatus; label: string }[] = [
   { value: "entregue", label: "Entregue" },
 ];
 
+type StaffDraft = {
+  aluno: string;
+  ra: string;
+  codigo: string;
+  dataChegada: string;
+  status: PackageStatus;
+};
+
 export function StaffCadastrar() {
   const { addPackage } = useApp();
   const navigate = useNavigate();
 
   const today = new Date().toISOString().split("T")[0];
 
-  function getDefaultForm() {
+  function getDefaultForm(): StaffDraft {
     return {
       aluno: "",
       ra: "",
@@ -29,7 +38,7 @@ export function StaffCadastrar() {
     };
   }
 
-  function getInitialForm() {
+  function getInitialForm(): StaffDraft {
     const fallback = getDefaultForm();
     const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return fallback;
@@ -55,13 +64,13 @@ export function StaffCadastrar() {
     }
   }
 
-  const [form, setForm] = useState(getInitialForm);
+  const [form, setForm] = useState<StaffDraft>(getInitialForm);
 
   useEffect(() => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 
-  function handleChange(field: keyof typeof form, value: string) {
+  function handleChange<K extends keyof StaffDraft>(field: K, value: StaffDraft[K]) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -152,11 +161,9 @@ export function StaffCadastrar() {
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               Data de Chegada <span className="text-red-500">*</span>
             </label>
-            <input
-              type="date"
+            <BrazilianDatePicker
               value={form.dataChegada}
-              onChange={(e) => handleChange("dataChegada", e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+              onChange={(value) => handleChange("dataChegada", value)}
             />
           </div>
 
@@ -167,7 +174,7 @@ export function StaffCadastrar() {
             </label>
             <select
               value={form.status}
-              onChange={(e) => handleChange("status", e.target.value)}
+              onChange={(e) => handleChange("status", e.target.value as PackageStatus)}
               className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
             >
               {statusOptions.map((opt) => (

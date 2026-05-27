@@ -1,6 +1,6 @@
 :root {
   color-scheme: light;
-  --unasp-orange: #FF6B35;
+  --unasp-orange: #FF5A2D;
   --unasp-navy: #003366;
   --app-bg: #f6f8fc;
   --panel-bg: #ffffff;
@@ -20,6 +20,8 @@
   --app-border: rgba(148, 163, 184, 0.18);
   --accent-bg: rgba(255, 107, 53, 0.16);
   --accent-text: #fb923c;
+  --unasp-navy: #60A5FA;
+  --unasp-orange: #FF5A2D;
 }
 
 .bg-unasp-orange {
@@ -71,6 +73,10 @@ body {
 :root[data-theme="dark"] .text-gray-500,
 :root[data-theme="dark"] .text-gray-400 {
   color: var(--muted-text) !important;
+}
+
+:root[data-theme="dark"] .text-blue-900 {
+  color: var(--unasp-navy) !important;
 }
 
 :root[data-theme="dark"] .hover\:bg-gray-50:hover,
