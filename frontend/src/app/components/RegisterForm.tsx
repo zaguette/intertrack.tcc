@@ -5,6 +5,7 @@ import { Card } from "./ui/Card";
 import { Input } from "./ui/Input";
 import { getStoredUsers, saveUsers } from "../lib/storage";
 import { User, UserRole } from "../lib/types";
+import { generateId } from "../lib/utils";
 
 type RegisterFormProps = {
   onCancel: () => void;
@@ -42,6 +43,7 @@ export default function RegisterForm({ onCancel, onRegistered }: RegisterFormPro
     }
 
     const newUser: User = {
+      id: generateId(),
       username: username.trim(),
       password,
       name: name.trim(),

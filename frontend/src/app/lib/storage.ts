@@ -2,6 +2,7 @@ import { PackageItem, User } from "./types";
 
 export const PACKAGES_KEY = "intertrack_packages_v2";
 export const SESSION_KEY = "intertrack_session_v2";
+export const USERS_KEY = "intertrack_users_v1";
 
 export function getStoredPackages(): PackageItem[] {
   const raw = localStorage.getItem(PACKAGES_KEY);
@@ -33,5 +34,22 @@ export function saveSession(user: User) {
 
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+}
+
+export function getStoredUsers() {
+  if (typeof window === "undefined") return [] as any[];
+  const raw = localStorage.getItem(USERS_KEY);
+  if (!raw) return [] as any[];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [] as any[];
+  }
+}
+
+export function saveUsers(users: any[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 

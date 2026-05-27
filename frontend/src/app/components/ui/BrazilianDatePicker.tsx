@@ -121,7 +121,8 @@ export function BrazilianDatePicker({ value, onChange, className = "", disabled 
       </button>
 
       {open && (
-        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-[19rem] rounded-lg border border-gray-200 bg-[#f2efe8] p-3 shadow-xl">
+        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-30 w-[19rem] rounded-lg border p-3 shadow-xl brazil-datepicker-panel"
+             style={{ backgroundColor: "var(--panel-bg)", borderColor: "var(--app-border)", color: "var(--app-text)" }}>
           <div className="mb-3 flex items-center justify-between gap-2">
             <button
               type="button"
@@ -132,7 +133,7 @@ export function BrazilianDatePicker({ value, onChange, className = "", disabled 
               <ChevronLeft size={18} />
             </button>
 
-            <div className="text-sm font-semibold capitalize text-gray-900">{monthLabel}</div>
+            <div className="text-sm font-semibold text-[var(--app-text)]">{monthLabel}</div>
 
             <div className="flex items-center gap-1">
               <button
@@ -154,7 +155,7 @@ export function BrazilianDatePicker({ value, onChange, className = "", disabled 
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-600">
+          <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-text)]">
             {weekdayLabels.map((label) => (
               <div key={label} className="py-1">
                 {label}
@@ -172,9 +173,9 @@ export function BrazilianDatePicker({ value, onChange, className = "", disabled 
                   key={isoDate}
                   type="button"
                   onClick={() => selectDate(date)}
-                  className={`h-8 rounded-md text-sm transition ${
-                    currentMonth ? "text-gray-900 hover:bg-blue-100" : "text-gray-400 hover:bg-black/5"
-                  } ${isSelected ? "bg-blue-500 text-white hover:bg-blue-500" : ""}`}
+                  className={`h-8 rounded-md text-sm transition outline-none flex items-center justify-center ${
+                    currentMonth ? "hover:bg-blue-100" : "text-[var(--muted-text)] hover:bg-black/5"
+                  } ${isSelected ? "bg-unasp-navy text-white" : ""}`}
                 >
                   {date.getDate()}
                 </button>
@@ -186,14 +187,14 @@ export function BrazilianDatePicker({ value, onChange, className = "", disabled 
             <button
               type="button"
               onClick={() => onChange("")}
-              className="rounded-md px-2 py-1 text-blue-700 transition hover:bg-blue-100"
+              className="rounded-md px-2 py-1 text-[var(--unasp-navy)] transition hover:bg-[var(--accent-bg)]"
             >
               Limpar
             </button>
             <button
               type="button"
               onClick={() => selectDate(new Date())}
-              className="rounded-md px-2 py-1 text-blue-700 transition hover:bg-blue-100"
+              className="rounded-md px-2 py-1 text-[var(--unasp-navy)] transition hover:bg-[var(--accent-bg)]"
             >
               Hoje
             </button>

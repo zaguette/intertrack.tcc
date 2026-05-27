@@ -25,8 +25,8 @@ export function StudentConsultar() {
     return myPackages.filter((p) => {
       const matchSearch =
         !search.trim() ||
-        p.codigo.toLowerCase().includes(search.toLowerCase()) ||
-        p.aluno.toLowerCase().includes(search.toLowerCase());
+        (p.codigo ?? "").toLowerCase().includes(search.toLowerCase()) ||
+        (p.aluno ?? "").toLowerCase().includes(search.toLowerCase());
 
       const matchStatus = statusFilter === "todos" || p.status === statusFilter;
 
@@ -34,7 +34,8 @@ export function StudentConsultar() {
     });
   }, [myPackages, search, statusFilter]);
 
-  function formatDate(date: string) {
+  function formatDate(date?: string) {
+    if (!date) return "—";
     const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
   }
