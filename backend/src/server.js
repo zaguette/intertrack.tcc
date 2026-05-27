@@ -22,8 +22,8 @@ app.use(cors());
 
 // Rotas
 app.use('/usuarios', userRoutes);
-// app.use('/nomes-entrega', nomeEntregaRoutes);
-// app.use('/encomendas', encomendaRoutes);
+app.use('/nomes-entrega', nomeEntregaRoutes);
+app.use('/encomendas', encomendaRoutes);
 
 // Rota teste
 app.get('/', (req, res) => {
