@@ -1,10 +1,9 @@
 
 export {};
 
-import { getPrisma } from '../../prisma.client.js';
+import prisma from '../config/prisma.js';
 
 export const criar = async (dados) => {
-  const prisma = await getPrisma();
   return await prisma.nomesEntrega.create({
     data: dados
   });

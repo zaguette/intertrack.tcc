@@ -9,14 +9,23 @@ interface StudentHeaderProps {
   onOpenSidebar?: () => void;
 }
 
+function normalizeNotificationId(id: string) {
+  const deliveredLegacyMatch = id.match(/^delivered:([^:]+):.+$/);
+  if (deliveredLegacyMatch) {
+    return `delivered:${deliveredLegacyMatch[1]}`;
+  }
+
+  return id;
+}
+
 export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHeaderProps) {
   const { packages, user } = useApp();
   const lastAvailableIdsRef = useRef<string[] | null>(null);
   const lastDeliveredIdsRef = useRef<string[] | null>(null);
-  const readLoadedRef = useRef(false);
   const bellContainerRef = useRef<HTMLDivElement | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
+  const [readNotificationsHydrated, setReadNotificationsHydrated] = useState(false);
 
   const readNotificationSet = useMemo(
     () => new Set(readNotificationIds),
@@ -38,15 +47,17 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   const notifications = useMemo(() => {
     const availableNotifications = availablePackages.map((pkg) => ({
       id: `available:${pkg.id}`,
+      packageId: pkg.id,
       message: `Sua encomenda ${pkg.codigo} está disponível para retirada.`,
       detail: `Chegada: ${formatDate(pkg.dataChegada)}`,
       sortDate: pkg.dataChegada,
     }));
 
     const deliveredNotifications = deliveredPackages.map((pkg) => ({
-      id: `delivered:${pkg.id}:${pkg.collectedAt ?? pkg.dataRetirada ?? ""}`,
+      id: `delivered:${pkg.id}`,
+      packageId: pkg.id,
       message: `Sua encomenda ${pkg.codigo} foi retirada por: ${pkg.collectedBy}.`,
-      detail: `Retirada: ${formatDate(pkg.dataRetirada)}`,
+      detail: `Retirada: ${formatDate(pkg.dataRetirada ?? pkg.dataChegada)}`,
       sortDate: pkg.collectedAt ?? pkg.dataRetirada ?? pkg.dataChegada,
     }));
 
@@ -56,12 +67,27 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   }, [availablePackages, deliveredPackages]);
 
   const unreadCount = useMemo(
-    () => notifications.filter((notification) => !readNotificationSet.has(notification.id)).length,
-    [notifications, readNotificationSet]
+    () => {
+      if (!readNotificationsHydrated) return 0;
+
+      return notifications.filter((notification) => !isNotificationRead(notification)).length;
+    },
+    [notifications, readNotificationSet, readNotificationsHydrated]
   );
 
   const notificationCount =
-    user?.tipo === "aluno" ? unreadCount : availableCount;
+    user?.tipo === "aluno"
+      ? readNotificationsHydrated
+        ? unreadCount
+        : 0
+      : availableCount;
+
+  function isNotificationRead(notification: { id: string; packageId: string }) {
+    return (
+      readNotificationSet.has(notification.id) ||
+      readNotificationSet.has(`pkg:${notification.packageId}`)
+    );
+  }
 
   function formatDate(date: string) {
     const [year, month, day] = date.split("-");
@@ -96,32 +122,46 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   useEffect(() => {
     if (!user || user.tipo !== "aluno") {
       setReadNotificationIds([]);
-      readLoadedRef.current = false;
+      setReadNotificationsHydrated(false);
       return;
     }
 
     const storageKey = getReadStorageKey();
-    if (!storageKey) return;
+    if (!storageKey) {
+      setReadNotificationsHydrated(true);
+      return;
+    }
     const raw = localStorage.getItem(storageKey);
     if (!raw) {
       setReadNotificationIds([]);
-      readLoadedRef.current = true;
+      setReadNotificationsHydrated(true);
       return;
     }
 
     try {
       const parsed = JSON.parse(raw) as string[];
-      setReadNotificationIds(Array.isArray(parsed) ? parsed : []);
+      const normalized = Array.isArray(parsed)
+        ? Array.from(
+            new Set(
+              parsed
+                .filter((item): item is string => typeof item === "string")
+                .map((item) => normalizeNotificationId(item))
+            )
+          )
+        : [];
+      setReadNotificationIds(normalized);
+
+      localStorage.setItem(storageKey, JSON.stringify(normalized));
     } catch {
       setReadNotificationIds([]);
     }
 
-    readLoadedRef.current = true;
+    setReadNotificationsHydrated(true);
   }, [user]);
 
   useEffect(() => {
     if (!user || user.tipo !== "aluno") return;
-    if (!readLoadedRef.current) return;
+    if (!readNotificationsHydrated) return;
 
     const storageKey = getReadStorageKey();
     if (!storageKey) return;
@@ -129,15 +169,72 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     localStorage.setItem(storageKey, JSON.stringify(readNotificationIds));
   }, [readNotificationIds, user]);
 
-  useEffect(() => {
-    const validIds = new Set(notifications.map((notification) => notification.id));
-    setReadNotificationIds((prev) => prev.filter((id) => validIds.has(id)));
-  }, [notifications]);
-
   function markNotificationAsRead(id: string) {
+    const normalizedId = normalizeNotificationId(id);
+    const packageId = normalizedId.split(":")[1];
+
     setReadNotificationIds((prev) => {
-      if (prev.includes(id)) return prev;
-      return [...prev, id];
+      const nextSet = new Set(prev);
+      nextSet.add(normalizedId);
+      if (packageId) {
+        nextSet.add(`pkg:${packageId}`);
+      }
+
+      if (nextSet.size === prev.length) return prev;
+
+      const next = Array.from(nextSet);
+      const storageKey = getReadStorageKey();
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      }
+      return next;
+    });
+  }
+
+  function markPackagesAsRead(packageIds: string[]) {
+    if (packageIds.length === 0) return;
+
+    setReadNotificationIds((prev) => {
+      const nextSet = new Set(prev);
+
+      packageIds.forEach((packageId) => {
+        nextSet.add(`pkg:${packageId}`);
+        nextSet.add(`available:${packageId}`);
+        nextSet.add(`delivered:${packageId}`);
+      });
+
+      if (nextSet.size === prev.length) return prev;
+
+      const next = Array.from(nextSet);
+      const storageKey = getReadStorageKey();
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      }
+      return next;
+    });
+  }
+
+  function handleToggleNotifications() {
+    setNotificationsOpen((current) => {
+      const next = !current;
+
+      if (next) {
+        setReadNotificationIds((prev) => {
+          const merged = new Set(prev);
+          notifications.forEach((notification) => {
+            merged.add(normalizeNotificationId(notification.id));
+            merged.add(`pkg:${notification.packageId}`);
+          });
+          const nextIds = Array.from(merged);
+          const storageKey = getReadStorageKey();
+          if (storageKey) {
+            localStorage.setItem(storageKey, JSON.stringify(nextIds));
+          }
+          return nextIds;
+        });
+      }
+
+      return next;
     });
   }
 
@@ -163,6 +260,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
             : `${newAvailablePackages.length} novas encomendas estão disponíveis para retirada.`;
 
         sendRealtimeNotification(message);
+        markPackagesAsRead(newAvailablePackages.map((pkg) => pkg.id));
       }
     }
 
@@ -191,11 +289,34 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
             : `${newDeliveredPackages.length} encomendas foram registradas como retiradas.`;
 
         sendRealtimeNotification(message);
+        markPackagesAsRead(newDeliveredPackages.map((pkg) => pkg.id));
       }
     }
 
     lastDeliveredIdsRef.current = currentDeliveredIds;
   }, [deliveredPackages, user]);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+
+    setReadNotificationIds((prev) => {
+      const merged = new Set(prev);
+      notifications.forEach((notification) => {
+        merged.add(normalizeNotificationId(notification.id));
+        merged.add(`pkg:${notification.packageId}`);
+      });
+      const nextIds = Array.from(merged);
+
+      if (nextIds.length === prev.length) return prev;
+
+      const storageKey = getReadStorageKey();
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(nextIds));
+      }
+
+      return nextIds;
+    });
+  }, [notificationsOpen, notifications]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -223,7 +344,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
         </div>
         <div className="relative" ref={bellContainerRef}>
           <button
-            onClick={() => setNotificationsOpen((current) => !current)}
+            onClick={handleToggleNotifications}
             className="relative rounded-lg p-1.5 text-[var(--muted-text)] transition hover:bg-black/5"
             title="Abrir notificações"
           >
@@ -249,7 +370,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
               ) : (
                 <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
                   {notifications.map((notification) => {
-                    const isRead = readNotificationSet.has(notification.id);
+                    const isRead = isNotificationRead(notification);
                     return (
                       <button
                         key={notification.id}

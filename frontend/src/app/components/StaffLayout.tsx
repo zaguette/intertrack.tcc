@@ -25,12 +25,14 @@ export function StaffLayout({ children }: StaffLayoutProps) {
     navigate("/");
   }
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ showLogo = true }: { showLogo?: boolean }) => (
     <div className="flex h-full flex-col">
       {/* Logo */}
-      <div className="border-b border-[var(--app-border)] px-5 py-5">
-        <UNASPLogo size="md" />
-      </div>
+      {showLogo && (
+        <div className="border-b border-[var(--app-border)] px-5 py-5">
+          <UNASPLogo size="md" />
+        </div>
+      )}
 
       {/* User info */}
       <div className="border-b border-[var(--app-border)] px-5 py-4">
@@ -114,7 +116,7 @@ export function StaffLayout({ children }: StaffLayoutProps) {
           </button>
         </div>
         <div className="flex-1 overflow-hidden">
-          <SidebarContent />
+          <SidebarContent showLogo={false} />
         </div>
       </aside>
 

@@ -1,5 +1,5 @@
 
-import prisma from '../prisma/prisma.client.js';
+import prisma from '../config/prisma.js';
 
 
 export const criarEncomenda = async (dados, funcionario_id) => {

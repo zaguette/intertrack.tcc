@@ -1,4 +1,4 @@
-i// src/server.js
+// src/server.js
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -6,11 +6,11 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 
-import { connect, disconnect } from '../prisma/prisma.client.js';
+import prisma from './config/prisma.js';
 
 import userRoutes from './routes/userRoutes.js';
-// import encomendaRoutes from './routes/encomendaRoutes.js';
-// import nomeEntregaRoutes from './routes/nomeEntregaRoutes.js';
+import encomendaRoutes from './routes/encomendaRoutes.js';
+import nomeEntregaRoutes from './routes/nomeEntregaRoutes.js';
 
 const app = express();
 
@@ -38,7 +38,7 @@ async function startServer() {
 
   try {
 
-    await connect();
+    await prisma.$connect();
 
     console.log('✅ Conexão com banco de dados estabelecida com sucesso!');
 
@@ -66,7 +66,7 @@ async function gracefulShutdown() {
 
       server.close(async () => {
 
-        await disconnect();
+        await prisma.$disconnect();
 
         console.log('✅ Conexão com banco encerrada.');
 
@@ -75,7 +75,7 @@ async function gracefulShutdown() {
 
     } else {
 
-      await disconnect();
+      await prisma.$disconnect();
 
       process.exit(0);
     }
