@@ -6,7 +6,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 
-import { connect, disconnect } from '../prisma.client.js';
+import { connect, disconnect } from '../prisma/prisma.client.js';
 
 import userRoutes from './routes/userRoutes.js';
 // import encomendaRoutes from './routes/encomendaRoutes.js';
