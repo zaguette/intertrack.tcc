@@ -109,8 +109,8 @@ export function LoginPage() {
       <div className="relative z-10 w-full max-w-sm">
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo */}
-          <div className="mb-6 flex flex-col items-center gap-3">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-500 shadow-lg ring-4 ring-orange-200">
+            <div className="mb-6 flex flex-col items-center gap-3">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-500 shadow-lg">
               <img src="/logounasp.png" alt="UNASP Logo" className="h-[5.5rem] w-[5.5rem] object-contain" />
             </div>
             <div className="text-center">
