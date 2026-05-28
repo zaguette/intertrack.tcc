@@ -1,8 +1,9 @@
 
 import prisma from '../config/prisma.js';
-
+import { v4 as uuidv4 } from 'uuid';
 
 export const criarEncomenda = async (dados, funcionario_id) => {
+
   const {
     codigo_rastreio,
     descricao,
@@ -16,21 +17,35 @@ export const criarEncomenda = async (dados, funcionario_id) => {
 
     const encomenda = await tx.encomenda.create({
       data: {
+
+        id: uuidv4(),
+
         codigo_rastreio,
+
         descricao,
-        destinatario_usuario_id: Number(destinatario_usuario_id),
-        remetente_id: remetente_id ? Number(remetente_id) : null,
-        funcionario_id: Number(funcionario_id),
-        status_atual_id: Number(status_atual_id),
+
+        destinatario_usuario_id,
+
+        remetente_id: remetente_id || null,
+
+        funcionario_id,
+
+        status_atual_id,
+
         observacoes
       }
     });
 
     await tx.historicoStatus.create({
       data: {
+
+        id: uuidv4(),
+
         encomenda_id: encomenda.id,
-        status_id: Number(status_atual_id),
-        alterado_por: Number(funcionario_id)
+
+        status_id: status_atual_id,
+
+        alterado_por: funcionario_id
       }
     });
 
@@ -39,16 +54,20 @@ export const criarEncomenda = async (dados, funcionario_id) => {
 };
 
 export const listarEncomendas = async (busca) => {
+
   return await prisma.encomenda.findMany({
+
     where: busca
       ? {
           OR: [
+
             {
               codigo_rastreio: {
                 contains: busca,
                 mode: 'insensitive'
               }
             },
+
             {
               destinatario: {
                 nome: {
@@ -62,10 +81,12 @@ export const listarEncomendas = async (busca) => {
       : {},
 
     include: {
+
       statusAtual: true,
 
       destinatario: {
         select: {
+          id: true,
           nome: true,
           email: true
         }
@@ -77,12 +98,15 @@ export const listarEncomendas = async (busca) => {
 };
 
 export const buscarEncomendaPorId = async (id) => {
+
   return await prisma.encomenda.findUnique({
+
     where: {
-      id: Number(id)
+      id
     },
 
     include: {
+
       statusAtual: true,
 
       destinatario: true,
@@ -99,7 +123,9 @@ export const buscarEncomendaPorId = async (id) => {
 
       historicos: {
         include: {
+
           status: true,
+
           funcionario: {
             select: {
               nome: true
@@ -120,20 +146,27 @@ export const atualizarStatusEncomenda = async (
   return await prisma.$transaction(async (tx) => {
 
     const encomenda = await tx.encomenda.update({
+
       where: {
-        id: Number(id)
+        id
       },
 
       data: {
-        status_atual_id: Number(status_atual_id)
+        status_atual_id
       }
     });
 
     await tx.historicoStatus.create({
+
       data: {
-        encomenda_id: Number(id),
-        status_id: Number(status_atual_id),
-        alterado_por: Number(funcionario_id)
+
+        id: uuidv4(),
+
+        encomenda_id: id,
+
+        status_id: status_atual_id,
+
+        alterado_por: funcionario_id
       }
     });
 
@@ -144,8 +177,9 @@ export const atualizarStatusEncomenda = async (
 export const deletarEncomenda = async (id) => {
 
   return await prisma.encomenda.delete({
+
     where: {
-      id: Number(id)
+      id
     }
   });
 };
