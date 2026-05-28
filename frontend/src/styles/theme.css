@@ -100,3 +100,15 @@ body {
   background-color: #1e293b;
   color: #ffffff;
 }
+
+/* Brazilian datepicker adjustments */
+.brazil-datepicker-panel {
+  background-color: var(--panel-bg);
+  color: var(--app-text);
+}
+.brazil-datepicker-panel button {
+  border: none;
+}
+.brazil-datepicker-panel .bg-unasp-navy {
+  background-color: var(--unasp-navy);
+}

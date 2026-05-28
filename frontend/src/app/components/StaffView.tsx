@@ -9,11 +9,13 @@ import { Input } from "./ui/Input";
 import { Textarea } from "./ui/Textarea";
 import { Trash2, PackageCheck, PackageOpen, Edit2 } from "lucide-react";
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   pending: "Aguardando processamento",
   available: "Disponível para retirada",
   collected: "Retirada",
-} as const;
+  disponivel: "Disponível para retirada",
+  entregue: "Retirada",
+};
 
 type StaffViewProps = {
   packages: PackageItem[];
@@ -48,7 +50,7 @@ export default function StaffView({
 
   const filteredPackages = packages.filter((p) => {
     if (!search.trim()) return true;
-    return p.studentName.toLowerCase().includes(search.trim().toLowerCase());
+    return (p.studentName ?? "").toLowerCase().includes(search.trim().toLowerCase());
   });
 
   function handleCreateOrUpdate() {
@@ -100,8 +102,8 @@ export default function StaffView({
 
   function startEdit(item: PackageItem) {
     setEditingId(item.id);
-    setStudentName(item.studentName);
-    setCode(item.code);
+    setStudentName(item.studentName ?? "");
+    setCode(item.code ?? "");
     setProtocol(item.protocol || "");
     setDescription(item.description || "");
     window.scrollTo({ top: 0, behavior: "smooth" });

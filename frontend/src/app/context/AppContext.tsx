@@ -52,16 +52,20 @@ function applyTheme(theme: "light" | "dark") {
   root.style.colorScheme = theme;
 }
 
-function normalizeStatus(status: string | undefined): PackageStatus {
-  if (status === "entregue") return "entregue";
-  return "disponivel";
+function normalizeStatus(status?: string): PackageStatus {
+  if (!status) return "pending";
+  const s = status.toString().toLowerCase();
+  if (s === "entregue" || s === "collected") return "collected";
+  if (s === "disponivel" || s === "available") return "available";
+  if (s === "pending") return "pending";
+  return "pending";
 }
 
-function normalizePackage(pkg: PackageItem): PackageItem {
+function normalizePackage(pkg: Partial<PackageItem>): PackageItem {
   return {
-    ...pkg,
-    status: normalizeStatus(pkg.status),
-  };
+    ...(pkg as PackageItem),
+    status: normalizeStatus((pkg as PackageItem).status),
+  } as PackageItem;
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {

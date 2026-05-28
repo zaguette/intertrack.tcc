@@ -50,7 +50,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
       packageId: pkg.id,
       message: `Sua encomenda ${pkg.codigo} está disponível para retirada.`,
       detail: `Chegada: ${formatDate(pkg.dataChegada)}`,
-      sortDate: pkg.dataChegada,
+      sortDate: pkg.dataChegada ?? "",
     }));
 
     const deliveredNotifications = deliveredPackages.map((pkg) => ({
@@ -58,11 +58,11 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
       packageId: pkg.id,
       message: `Sua encomenda ${pkg.codigo} foi retirada por: ${pkg.collectedBy}.`,
       detail: `Retirada: ${formatDate(pkg.dataRetirada ?? pkg.dataChegada)}`,
-      sortDate: pkg.collectedAt ?? pkg.dataRetirada ?? pkg.dataChegada,
+      sortDate: pkg.collectedAt ?? pkg.dataRetirada ?? pkg.dataChegada ?? "",
     }));
 
     return [...deliveredNotifications, ...availableNotifications].sort((a, b) =>
-      b.sortDate.localeCompare(a.sortDate)
+      (b.sortDate ?? "").localeCompare(a.sortDate ?? "")
     );
   }, [availablePackages, deliveredPackages]);
 
@@ -89,7 +89,8 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     );
   }
 
-  function formatDate(date: string) {
+  function formatDate(date?: string) {
+    if (!date) return "—";
     const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
   }

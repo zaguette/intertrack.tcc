@@ -20,11 +20,13 @@ const sections = [
   },
 ];
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   pending: "Aguardando",
   available: "Disponível",
   collected: "Retirada",
-} as const;
+  disponivel: "Disponível",
+  entregue: "Retirada",
+};
 
 type StudentViewProps = {
   packages: PackageItem[];
@@ -32,11 +34,11 @@ type StudentViewProps = {
 };
 
 export default function StudentView({ packages, user }: StudentViewProps) {
-  const normalizedName = user.name.trim().toLowerCase();
-  const normalizedUsername = user.username.trim().toLowerCase();
+  const normalizedName = (user.name ?? user.nome ?? "").trim().toLowerCase();
+  const normalizedUsername = (user.username ?? "").trim().toLowerCase();
 
   const studentPackages = packages.filter((item) => {
-    const itemName = item.studentName.trim().toLowerCase();
+    const itemName = (item.studentName ?? "").trim().toLowerCase();
     return itemName === normalizedName || itemName === normalizedUsername;
   });
 
