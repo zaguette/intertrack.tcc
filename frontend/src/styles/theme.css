@@ -1,27 +1,39 @@
 :root {
   color-scheme: light;
-  --unasp-orange: #FF5A2D;
-  --unasp-navy: #003366;
-  --app-bg: #f6f8fc;
+  --unasp-orange: #e6502e;
+  --unasp-navy: #112349; 
+  --sidebar-bg: #112349; 
+  --topbar-bg: #e6502e;
+  --title-bg: transparent;
+
+  --app-bg: #f5f6fa;
   --panel-bg: #ffffff;
-  --app-text: #0f172a;
+  --table-bg: #ffffff;
+  --app-text: #1e293b;
   --muted-text: #64748b;
-  --app-border: rgba(148, 163, 184, 0.24);
-  --accent-bg: rgba(255, 107, 53, 0.12);
-  --accent-text: #c2410c;
+  --app-border: rgba(0, 0, 0, 0.06);
+  --accent-bg: rgba(230, 80, 46, 0.12);
+  --accent-text: #e6502e;
+  --hover-bg: #f8fafc;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --unasp-orange: #e6502e;
+  --unasp-navy: #60a5fa;
+  --sidebar-bg: #090f1d; /* Deep dark blue for sidebar */
+  --topbar-bg: #e6502e; /* From requirements */
+  --title-bg: #1e293b;
+
   --app-bg: #0b1120;
   --panel-bg: #111827;
-  --app-text: #e5e7eb;
+  --table-bg: #0f172a;
+  --app-text: #f8fafc;
   --muted-text: #94a3b8;
-  --app-border: rgba(148, 163, 184, 0.18);
-  --accent-bg: rgba(255, 107, 53, 0.16);
+  --app-border: rgba(255, 255, 255, 0.08);
+  --accent-bg: rgba(230, 80, 46, 0.16);
   --accent-text: #fb923c;
-  --unasp-navy: #60A5FA;
-  --unasp-orange: #FF5A2D;
+  --hover-bg: #1e293b;
 }
 
 .bg-unasp-orange {
@@ -45,16 +57,23 @@ body {
   color: var(--app-text);
 }
 
+.title-highlight {
+  background-color: var(--title-bg);
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+}
+
 :root[data-theme="dark"] .bg-white {
   background-color: var(--panel-bg) !important;
 }
 
 :root[data-theme="dark"] .bg-gray-50 {
-  background-color: #0f172a !important;
+  background-color: var(--table-bg) !important;
 }
 
 :root[data-theme="dark"] .bg-gray-100 {
-  background-color: rgba(148, 163, 184, 0.16) !important;
+  background-color: var(--hover-bg) !important;
 }
 
 :root[data-theme="dark"] .border-gray-100,
@@ -81,22 +100,22 @@ body {
 
 :root[data-theme="dark"] .hover\:bg-gray-50:hover,
 :root[data-theme="dark"] .hover\:bg-gray-100:hover {
-  background-color: rgba(148, 163, 184, 0.1) !important;
+  background-color: var(--hover-bg) !important;
 }
 
 :root[data-theme="dark"] select {
-  background-color: #0f172a !important;
-  color: #e5e7eb !important;
+  background-color: var(--table-bg) !important;
+  color: var(--app-text) !important;
   border-color: var(--app-border) !important;
 }
 
 :root[data-theme="dark"] option {
-  background-color: #0f172a;
-  color: #e5e7eb;
+  background-color: var(--table-bg);
+  color: var(--app-text);
 }
 
 :root[data-theme="dark"] option:checked,
 :root[data-theme="dark"] option:hover {
-  background-color: #1e293b;
-  color: #ffffff;
+  background-color: var(--hover-bg);
+  color: var(--app-text);
 }

@@ -15,7 +15,9 @@ export function StatCard({ title, value, icon, iconBg, className = "" }: StatCar
         {icon}
       </div>
       <div>
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+        <div className="title-highlight mb-1">
+          <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">{title}</p>
+        </div>
         <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
       </div>
     </div>

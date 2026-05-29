@@ -177,7 +177,7 @@ export function StaffDashboard() {
               </button>
               <button
                 onClick={handleDeliveryConfirm}
-                className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                className="rounded-lg bg-[var(--unasp-orange)] px-4 py-2 text-sm font-medium text-white transition hover:brightness-110"
               >
                 Confirmar entrega
               </button>
@@ -222,7 +222,9 @@ export function StaffDashboard() {
       {/* Recent packages table */}
       <div className="mb-8 rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden">
         <div className="border-b border-gray-100 px-6 py-4">
-          <h2 className="text-base font-semibold text-gray-900">Encomendas Recentes</h2>
+          <div className="title-highlight">
+            <h2 className="text-base font-semibold text-gray-900">Encomendas Recentes</h2>
+          </div>
         </div>
         <div className="overflow-x-auto">
           {recent.length === 0 ? (
@@ -320,16 +322,15 @@ export function StaffDashboard() {
       {/* Quick actions */}
       <div className="grid gap-4">
         <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-            <PackagePlus size={20} className="text-blue-900" />
+          <div className="title-highlight mb-2 text-black">
+            <h3 className="text-lg font-semibold m-0">Cadastrar Nova Encomenda</h3>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">Cadastrar Nova Encomenda</h3>
-          <p className="mt-2 text-base text-gray-500">
+          <p className="mt-1 text-base text-gray-500 mb-6">
             Registre a chegada de uma nova encomenda no sistema.
           </p>
           <button
             onClick={() => navigate("/funcionario/cadastrar")}
-            className="mt-6 w-full rounded-lg bg-blue-900 px-4 py-3 text-base font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full rounded-lg bg-[var(--unasp-navy)] px-4 py-3 text-base font-semibold text-white transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[var(--unasp-navy)] focus:ring-offset-2"
           >
             Cadastrar Encomenda
           </button>

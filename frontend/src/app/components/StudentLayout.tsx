@@ -29,20 +29,22 @@ export function StudentLayout({ children }: StudentLayoutProps) {
   }
 
   const SidebarContent = ({ showLogo = true }: { showLogo?: boolean }) => (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[var(--sidebar-bg)] text-white relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none"></div>
+
       {showLogo && (
-        <div className="border-b border-[var(--app-border)] px-5 py-5">
-          <UNASPLogo size="md" />
+        <div className="border-b border-white/10 px-5 py-5 relative z-10">
+          <UNASPLogo size="md" dark={true} />
         </div>
       )}
 
-      <div className="border-b border-[var(--app-border)] px-5 py-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-text)]">Aluno</p>
-        <p className="mt-1 text-sm font-semibold text-[var(--app-text)]">{user?.nome}</p>
-        <p className="text-xs text-[var(--muted-text)]">RA: {user?.ra}</p>
+      <div className="border-b border-white/10 px-5 py-4 relative z-10">
+        <p className="text-xs font-medium uppercase tracking-wide text-blue-200">Aluno</p>
+        <p className="mt-1 text-sm font-semibold text-white">{user?.nome}</p>
+        <p className="text-xs text-blue-200">RA: {user?.ra}</p>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 relative z-10">
         {navItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -52,8 +54,8 @@ export function StudentLayout({ children }: StudentLayoutProps) {
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
                 isActive
-                  ? "bg-blue-900 text-white shadow-sm"
-                  : "text-[var(--muted-text)] hover:bg-black/5 hover:text-[var(--app-text)]"
+                  ? "bg-[var(--unasp-orange)] text-white shadow-sm"
+                  : "text-blue-200 hover:bg-white/10 hover:text-white"
               }`
             }
           >
@@ -63,10 +65,10 @@ export function StudentLayout({ children }: StudentLayoutProps) {
         ))}
       </nav>
 
-      <div className="border-t border-[var(--app-border)] px-3 py-4 space-y-2">
+      <div className="border-t border-white/10 px-3 py-4 space-y-2 relative z-10">
         <button
           onClick={toggleTheme}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[var(--muted-text)] transition hover:bg-black/5 hover:text-[var(--app-text)]"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-blue-200 transition hover:bg-white/10 hover:text-white"
           title={theme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
         >
           <MoonStar size={18} />
@@ -75,7 +77,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[var(--muted-text)] transition hover:bg-red-500/10 hover:text-red-500"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-blue-200 transition hover:bg-red-500/20 hover:text-red-300"
         >
           <LogOut size={18} />
           Sair
@@ -86,7 +88,7 @@ export function StudentLayout({ children }: StudentLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-[var(--app-bg)] text-[var(--app-text)]">
-      <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r border-[var(--app-border)] bg-[var(--panel-bg)] sticky top-0 h-screen overflow-hidden">
+      <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col sticky top-0 h-screen overflow-hidden ring-1 ring-black/5 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <SidebarContent />
       </aside>
 
@@ -98,20 +100,20 @@ export function StudentLayout({ children }: StudentLayoutProps) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 flex-col border-r border-[var(--app-border)] bg-[var(--panel-bg)] transition-transform duration-300 lg:hidden flex ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 flex-col bg-[var(--sidebar-bg)] text-white transition-transform duration-300 lg:hidden flex ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-[var(--app-border)] px-4 py-4">
-          <UNASPLogo size="sm" />
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 relative z-10">
+          <UNASPLogo size="sm" dark={true} />
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1.5 text-[var(--muted-text)] hover:bg-black/5"
+            className="rounded-lg p-1.5 text-blue-200 hover:bg-white/10"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative z-10 w-full h-full">
           <SidebarContent showLogo={false} />
         </div>
       </aside>

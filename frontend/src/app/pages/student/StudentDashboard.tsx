@@ -54,7 +54,9 @@ export function StudentDashboard() {
 
         <div className="rounded-2xl bg-white border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-            <h2 className="text-base font-semibold text-gray-900">Minhas Encomendas</h2>
+            <div className="title-highlight">
+              <h2 className="text-base font-semibold text-gray-900 m-0">Minhas Encomendas</h2>
+            </div>
             <button
               onClick={() => navigate("/aluno/historico")}
               className="text-sm font-medium text-blue-600 transition hover:text-blue-800"

@@ -110,7 +110,9 @@ export function StaffCadastrar() {
           Voltar à Página Inicial
         </button>
       </div>
-      <h1 className="mb-6 text-2xl font-bold text-gray-900">Cadastrar Nova Encomenda</h1>
+      <div className="mb-6 title-highlight">
+        <h1 className="text-2xl font-bold text-gray-900">Cadastrar Nova Encomenda</h1>
+      </div>
 
       <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
         <div className="grid gap-5 sm:grid-cols-2">
@@ -190,7 +192,7 @@ export function StaffCadastrar() {
         <div className="mt-6">
           <button
             onClick={handleSubmit}
-            className="w-full rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full rounded-lg bg-[var(--unasp-orange)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
           >
             Cadastrar Encomenda
           </button>

@@ -193,9 +193,11 @@ export default function StaffView({
       <Card className="bg-unasp-navy text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold">
-              {editingId ? "✏️ Editar Encomenda" : "➕ Cadastrar Nova Encomenda"}
-            </h2>
+            <div className="title-highlight mb-1 text-black">
+              <h2 className="text-lg font-semibold m-0">
+                {editingId ? "✏️ Editar Encomenda" : "➕ Cadastrar Nova Encomenda"}
+              </h2>
+            </div>
             <p className="text-sm text-blue-200">
               {editingId ? "Altere os dados da encomenda e salve as mudanças" : "Registre a chegada de uma nova encomenda"}
             </p>

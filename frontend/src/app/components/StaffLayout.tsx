@@ -26,23 +26,25 @@ export function StaffLayout({ children }: StaffLayoutProps) {
   }
 
   const SidebarContent = ({ showLogo = true }: { showLogo?: boolean }) => (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-[var(--sidebar-bg)] text-white relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none"></div>
+      
       {/* Logo */}
       {showLogo && (
-        <div className="border-b border-[var(--app-border)] px-5 py-5">
-          <UNASPLogo size="md" />
+        <div className="border-b border-white/10 px-5 py-5 relative z-10">
+          <UNASPLogo size="md" dark={true} />
         </div>
       )}
 
       {/* User info */}
-      <div className="border-b border-[var(--app-border)] px-5 py-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted-text)]">Funcionário</p>
-        <p className="mt-1 text-sm font-semibold text-[var(--app-text)]">{user?.nome}</p>
-        <p className="text-xs text-[var(--muted-text)]">Administrador</p>
+      <div className="border-b border-white/10 px-5 py-4 relative z-10">
+        <p className="text-xs font-medium uppercase tracking-wide text-blue-200">Funcionário</p>
+        <p className="mt-1 text-sm font-semibold text-white">{user?.nome}</p>
+        <p className="text-xs text-blue-200">Administrador</p>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 relative z-10">
         {navItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -52,8 +54,8 @@ export function StaffLayout({ children }: StaffLayoutProps) {
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
                 isActive
-                  ? "bg-blue-900 text-white shadow-sm"
-                  : "text-[var(--muted-text)] hover:bg-black/5 hover:text-[var(--app-text)]"
+                  ? "bg-[var(--unasp-orange)] text-white shadow-sm"
+                  : "text-blue-200 hover:bg-white/10 hover:text-white"
               }`
             }
           >
@@ -65,10 +67,10 @@ export function StaffLayout({ children }: StaffLayoutProps) {
       </nav>
 
       {/* Sidebar controls */}
-      <div className="border-t border-[var(--app-border)] px-3 py-4 space-y-2">
+      <div className="border-t border-white/10 px-3 py-4 space-y-2 relative z-10">
         <button
           onClick={toggleTheme}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[var(--muted-text)] transition hover:bg-black/5 hover:text-[var(--app-text)]"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-blue-200 transition hover:bg-white/10 hover:text-white"
           title={theme === "light" ? "Ativar modo escuro" : "Ativar modo claro"}
         >
           <SunMoon size={18} />
@@ -76,7 +78,7 @@ export function StaffLayout({ children }: StaffLayoutProps) {
         </button>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[var(--muted-text)] transition hover:bg-red-500/10 hover:text-red-500"
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-blue-200 transition hover:bg-red-500/20 hover:text-red-300"
         >
           <LogOut size={18} />
           Sair
@@ -88,7 +90,7 @@ export function StaffLayout({ children }: StaffLayoutProps) {
   return (
     <div className="flex min-h-screen bg-[var(--app-bg)] text-[var(--app-text)]">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r border-[var(--app-border)] bg-[var(--panel-bg)] sticky top-0 h-screen overflow-hidden">
+      <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col sticky top-0 h-screen overflow-hidden ring-1 ring-black/5 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <SidebarContent />
       </aside>
 
@@ -102,20 +104,20 @@ export function StaffLayout({ children }: StaffLayoutProps) {
 
       {/* Mobile Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 flex-col border-r border-[var(--app-border)] bg-[var(--panel-bg)] transition-transform duration-300 lg:hidden flex ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 flex-col bg-[var(--sidebar-bg)] text-white transition-transform duration-300 lg:hidden flex ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between border-b border-[var(--app-border)] px-4 py-4">
-          <UNASPLogo size="sm" />
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4 relative z-10">
+          <UNASPLogo size="sm" dark={true} />
           <button
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1.5 text-[var(--muted-text)] hover:bg-black/5"
+            className="rounded-lg p-1.5 text-blue-200 hover:bg-white/10"
           >
             <X size={20} />
           </button>
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative z-10 w-full h-full">
           <SidebarContent showLogo={false} />
         </div>
       </aside>
@@ -123,17 +125,17 @@ export function StaffLayout({ children }: StaffLayoutProps) {
       {/* Main Area */}
       <div className="flex flex-1 flex-col min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-30 border-b border-[var(--app-border)] bg-[var(--panel-bg)]/95 px-4 py-3 backdrop-blur">
+        <header className="sticky top-0 z-30 bg-[var(--topbar-bg)] px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.06)] text-white">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="rounded-lg p-1.5 text-[var(--muted-text)] hover:bg-black/5 lg:hidden"
+                className="rounded-lg p-1.5 text-blue-100 hover:bg-white/10 lg:hidden"
               >
                 <Menu size={22} />
               </button>
             </div>
-            <div className="text-sm font-medium text-[var(--muted-text)] hidden sm:block">
+            <div className="text-sm font-medium text-white/90 hidden sm:block">
               {user?.nome}
             </div>
           </div>

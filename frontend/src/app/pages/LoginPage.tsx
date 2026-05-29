@@ -114,7 +114,7 @@ export function LoginPage() {
               <img src="/logounasp.png" alt="UNASP Logo" className="h-[5.5rem] w-[5.5rem] object-contain" />
             </div>
             <div className="text-center">
-              <h1 className="text-xl font-black tracking-wide text-blue-900 uppercase">UNASP</h1>
+              <h1 className="text-xl font-black tracking-wide text-[var(--unasp-orange)] uppercase">UNASP</h1>
               <p className="text-xs font-medium text-blue-600">Correio Interno</p>
             </div>
           </div>
@@ -200,7 +200,7 @@ export function LoginPage() {
             {/* Submit */}
             <button
               onClick={isRegister ? handleRegister : handleLogin}
-              className="w-full rounded-lg bg-blue-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full rounded-lg bg-[var(--unasp-orange)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
             >
               {isRegister ? "Cadastrar" : "Entrar"}
             </button>

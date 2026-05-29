@@ -125,7 +125,7 @@ export function StudentPerfil() {
                 </button>
                 <button
                   onClick={handleSaveProfile}
-                  className="rounded-lg bg-blue-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  className="rounded-lg bg-[var(--unasp-orange)] px-3 py-2 text-sm font-semibold text-white transition hover:brightness-110"
                 >
                   Salvar
                 </button>

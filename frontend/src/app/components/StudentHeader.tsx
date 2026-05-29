@@ -331,26 +331,28 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--app-border)] bg-[var(--panel-bg)]/95 shadow-sm backdrop-blur">
+    <header className="sticky top-0 z-40 bg-[var(--topbar-bg)] px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.06)] text-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenSidebar}
-            className="rounded-lg p-1.5 text-[var(--muted-text)] hover:bg-black/5 lg:hidden"
+            className="rounded-lg p-1.5 text-blue-100 hover:bg-white/10 lg:hidden"
           >
             <Menu size={22} />
           </button>
-          <UNASPLogo />
+          <div className="block lg:hidden">
+            <UNASPLogo dark={true} />
+          </div>
         </div>
         <div className="relative" ref={bellContainerRef}>
           <button
             onClick={handleToggleNotifications}
-            className="relative rounded-lg p-1.5 text-[var(--muted-text)] transition hover:bg-black/5"
+            className="relative rounded-lg p-1.5 text-blue-100 transition hover:bg-white/10"
             title="Abrir notificações"
           >
-            <Bell size={20} className="text-[var(--muted-text)]" />
+            <Bell size={20} className="text-blue-100" />
             {notificationCount > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+              <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-[var(--topbar-bg)]">
                 {notificationCount}
               </span>
             )}
