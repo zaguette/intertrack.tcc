@@ -31,7 +31,7 @@ export function StudentPerfil() {
     if (!user?.ra) return;
 
     const fallback: StudentProfileData = {
-      fullName: user.nome,
+      fullName: user.nome ?? user.name ?? "",
       birthDate: "",
       ra: user.ra,
     };

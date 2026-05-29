@@ -133,7 +133,7 @@ export function registerUser(payload: {
 
   const storedUsers = getStoredUsers();
   const alreadyExists = storedUsers.some(
-    (user) => user.ra.toLowerCase() === normalizedRa.toLowerCase()
+    (user) => (user.ra ?? "").toLowerCase() === normalizedRa.toLowerCase()
   );
 
   if (alreadyExists) {

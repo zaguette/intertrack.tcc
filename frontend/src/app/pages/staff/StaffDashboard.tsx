@@ -38,13 +38,14 @@ export function StaffDashboard() {
   const naoRetiradas = packages.filter((p) => p.status !== "entregue").length;
 
   const recent = [...packages]
-    .sort((a, b) => b.dataChegada.localeCompare(a.dataChegada))
+    .sort((a, b) => (b.dataChegada ?? "").localeCompare(a.dataChegada ?? ""))
     .slice(0, 5);
 
   const pendingDeletePkg = packages.find((pkg) => pkg.id === confirmDeleteId);
   const deliveryPkg = packages.find((pkg) => pkg.id === deliveryModalId);
 
-  function formatDate(date: string) {
+  function formatDate(date?: string) {
+    if (!date) return "—";
     const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
   }
@@ -250,8 +251,8 @@ export function StaffDashboard() {
                     <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900">
                       {pkg.codigo}
                     </td>
-                    <td className="px-6 py-4 text-gray-700">{pkg.aluno}</td>
-                    <td className="px-6 py-4 text-gray-500">{pkg.ra}</td>
+                    <td className="px-6 py-4 text-gray-700">{pkg.aluno ?? ""}</td>
+                    <td className="px-6 py-4 text-gray-500">{pkg.ra ?? ""}</td>
                     <td className="whitespace-nowrap px-6 py-4 text-gray-500">
                       <span className="flex items-center gap-1.5">
                         <Calendar size={13} />

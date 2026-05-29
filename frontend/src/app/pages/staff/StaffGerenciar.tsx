@@ -27,16 +27,16 @@ export function StaffGerenciar() {
       const matchSearch =
         !normalizedSearch ||
         (searchBy === "nome"
-          ? pkg.aluno.toLowerCase().includes(normalizedSearch)
-          : pkg.ra.toLowerCase().includes(normalizedSearch));
+          ? (pkg.aluno ?? "").toLowerCase().includes(normalizedSearch)
+          : (pkg.ra ?? "").toLowerCase().includes(normalizedSearch));
 
       const matchStatus = statusFilter === "todos" || pkg.status === statusFilter;
       return matchSearch && matchStatus;
     });
 
     return filteredItems.sort((a, b) => {
-      if (sortOrder === "antigos") return a.dataChegada.localeCompare(b.dataChegada);
-      return b.dataChegada.localeCompare(a.dataChegada);
+      if (sortOrder === "antigos") return (a.dataChegada ?? "").localeCompare(b.dataChegada ?? "");
+      return (b.dataChegada ?? "").localeCompare(a.dataChegada ?? "");
     });
   }, [packages, search, statusFilter, searchBy, sortOrder]);
 
