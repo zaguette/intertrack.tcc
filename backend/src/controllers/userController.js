@@ -1,25 +1,15 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import { prisma } from "../config/prisma.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
-const prisma = new PrismaClient();
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || 'chave_mestra_unasp_2024';
+const JWT_SECRET = process.env.JWT_SECRET || "chave_mestra_unasp_2024";
 
 export const userController = {
-
   // REGISTRO
   async create(req, res) {
     try {
-
-      const {
-        nome,
-        email,
-        senha,
-        telefone
-      } = req.body;
+      const { nome, email, senha, telefone } = req.body;
 
       const hashedPassword = await bcrypt.hash(senha, 10);
 
@@ -34,28 +24,21 @@ export const userController = {
       });
 
       res.status(201).json({
-        mensagem: 'Usuário criado com sucesso!'
+        mensagem: "Usuário criado com sucesso!"
       });
-
     } catch (error) {
-
       console.log(error);
 
       res.status(400).json({
-        erro: 'Erro ao cadastrar usuário'
+        erro: "Erro ao cadastrar usuário"
       });
     }
   },
 
   // LOGIN
   async login(req, res) {
-
     try {
-
-      const {
-        email,
-        senha
-      } = req.body;
+      const { email, senha } = req.body;
 
       const usuario = await prisma.usuario.findUnique({
         where: {
@@ -65,18 +48,15 @@ export const userController = {
 
       if (!usuario) {
         return res.status(401).json({
-          erro: 'E-mail ou senha inválidos'
+          erro: "E-mail ou senha inválidos"
         });
       }
 
-      const senhaValida = await bcrypt.compare(
-        senha,
-        usuario.senha
-      );
+      const senhaValida = await bcrypt.compare(senha, usuario.senha);
 
       if (!senhaValida) {
         return res.status(401).json({
-          erro: 'E-mail ou senha inválidos'
+          erro: "E-mail ou senha inválidos"
         });
       }
 
@@ -86,7 +66,7 @@ export const userController = {
         },
         JWT_SECRET,
         {
-          expiresIn: '8h'
+          expiresIn: "8h"
         }
       );
 
@@ -99,13 +79,11 @@ export const userController = {
           email: usuario.email
         }
       });
-
     } catch (error) {
-
       console.log(error);
 
       res.status(500).json({
-        erro: 'Erro interno do servidor'
+        erro: "Erro interno do servidor"
       });
     }
   }

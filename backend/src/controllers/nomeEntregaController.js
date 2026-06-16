@@ -2,26 +2,17 @@ import {
   criarNomeAlternativo,
   listarNomesAlternativos,
   deletarNomeAlternativo
-} from '../services/nomeEntrega.services.js';
+} from "../services/nomeEntrega.service.js";
 
 export const nomeEntregaController = {
-
   async create(req, res) {
-
     try {
-
       const usuario_id = req.user.id;
 
-      const resultado =
-        await criarNomeAlternativo(
-          req.body,
-          usuario_id
-        );
+      const resultado = await criarNomeAlternativo(req.body, usuario_id);
 
       res.status(201).json(resultado);
-
     } catch (error) {
-
       res.status(500).json({
         erro: error.message
       });
@@ -29,20 +20,13 @@ export const nomeEntregaController = {
   },
 
   async list(req, res) {
-
     try {
-
       const usuario_id = req.user.id;
 
-      const nomes =
-        await listarNomesAlternativos(
-          usuario_id
-        );
+      const nomes = await listarNomesAlternativos(usuario_id);
 
       res.json(nomes);
-
     } catch (error) {
-
       res.status(500).json({
         erro: error.message
       });
@@ -50,20 +34,15 @@ export const nomeEntregaController = {
   },
 
   async delete(req, res) {
-
     try {
-
       const { id } = req.params;
 
       await deletarNomeAlternativo(id);
 
       res.json({
-        mensagem:
-          'Nome alternativo removido com sucesso'
+        mensagem: "Nome alternativo removido com sucesso"
       });
-
     } catch (error) {
-
       res.status(500).json({
         erro: error.message
       });
