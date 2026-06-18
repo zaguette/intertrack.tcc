@@ -8,14 +8,15 @@ import {
   savePackages,
   saveSession,
 } from "../lib/storage";
+import { fetchPackages as fetchPackagesFromApi, apiLogin, apiRegister } from "../lib/api";
 import { PackageItem, PackageStatus, User } from "../lib/types";
 
 interface AppContextType {
   user: User | null;
   packages: PackageItem[];
   theme: "light" | "dark";
-  login: (ra: string, password: string) => User | null;
-  register: (payload: { nome: string; ra: string; contato: string; senha: string }) => { ok: boolean; error?: string };
+  login: (ra: string, password: string) => Promise<User | null>;
+  register: (payload: { nome: string; email?: string; ra?: string; contato: string; senha: string }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   addPackage: (pkg: PackageItem) => void;
   updatePackage: (id: string, updates: Partial<PackageItem>) => void;
@@ -82,14 +83,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     applyTheme(nextTheme);
     persistTheme(nextTheme, storedSession);
 
-    const storedPackages = getStoredPackages().map(normalizePackage);
-    if (storedPackages.length === 0) {
-      const normalizedMocks = mockPackages.map(normalizePackage);
-      setPackages(normalizedMocks);
-      savePackages(normalizedMocks);
-    } else {
-      setPackages(storedPackages);
+    async function loadPackages() {
+      const storedPackages = getStoredPackages().map(normalizePackage);
+
+      // If there is an API token in localStorage, try fetching from backend first
+      try {
+        const apiResp = await fetchPackagesFromApi();
+        if (Array.isArray(apiResp) && apiResp.length > 0) {
+          setPackages(apiResp.map(normalizePackage));
+          return;
+        }
+      } catch (e) {
+        // ignore and fallback to local
+      }
+
+      if (storedPackages.length === 0) {
+        const normalizedMocks = mockPackages.map(normalizePackage);
+        setPackages(normalizedMocks);
+        savePackages(normalizedMocks);
+      } else {
+        setPackages(storedPackages);
+      }
     }
+
+    loadPackages();
   }, []);
 
   useEffect(() => {
@@ -119,22 +136,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  function login(ra: string, _password: string): User | null {
-    const found = authenticateUser(ra, _password);
-    if (!found) return null;
+  async function login(ra: string, _password: string): Promise<User | null> {
+    // Try server authentication first (email)
+    try {
+      const resp = await apiLogin(ra, _password);
+      const serverUser = resp.user;
 
-    const nextTheme = getStoredTheme(found);
-    setTheme(nextTheme);
-    applyTheme(nextTheme);
-    persistTheme(nextTheme, found);
+      const mapped: User = {
+        id: serverUser.id,
+        nome: serverUser.nome,
+        ra: (serverUser.ra as string) ?? serverUser.email ?? "",
+        tipo: "aluno",
+      };
 
-    setUser(found);
-    saveSession(found);
-    return found;
+      const nextTheme = getStoredTheme(mapped);
+      setTheme(nextTheme);
+      applyTheme(nextTheme);
+      persistTheme(nextTheme, mapped);
+
+      setUser(mapped);
+      saveSession(mapped);
+      return mapped;
+    } catch (e) {
+      // Fallback to local/mock authentication (accept ra or email)
+      const found = authenticateUser(ra, _password);
+      if (!found) return null;
+
+      const nextTheme = getStoredTheme(found);
+      setTheme(nextTheme);
+      applyTheme(nextTheme);
+      persistTheme(nextTheme, found);
+
+      setUser(found);
+      saveSession(found);
+      return found;
+    }
   }
 
-  function register(payload: { nome: string; ra: string; contato: string; senha: string }) {
-    const result = registerUser(payload);
+  async function register(payload: { nome: string; email?: string; ra?: string; contato: string; senha: string }) {
+    // Try server registration first (email-based)
+    if (payload.email) {
+      try {
+        await apiRegister({ nome: payload.nome, email: payload.email, senha: payload.senha, telefone: payload.contato });
+        return { ok: true };
+      } catch (e: any) {
+        // fallthrough to local register
+      }
+    }
+
+    const result = registerUser(payload as any);
     if (!result.ok) {
       return { ok: false, error: result.error };
     }

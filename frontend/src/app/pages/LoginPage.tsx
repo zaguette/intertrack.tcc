@@ -12,7 +12,7 @@ export function LoginPage() {
   const isRegister = mode === "register";
 
   const [fullName, setFullName] = useState("");
-  const [ra, setRa] = useState("");
+  const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -24,33 +24,36 @@ export function LoginPage() {
     }
   }, [user, navigate]);
 
-  function handleLogin() {
-    if (!ra.trim()) {
-      toast.error("Informe seu RA.");
+  async function handleLogin() {
+    if (!email.trim()) {
+      toast.error("Informe seu e-mail.");
       return;
     }
     if (!password.trim()) {
       toast.error("Informe sua senha.");
       return;
     }
+    try {
+      const loggedUser = await login(email, password);
+      if (!loggedUser) {
+        toast.error("Credenciais inválidas. Verifique seu e-mail e senha.");
+        return;
+      }
 
-    const loggedUser = login(ra, password);
-    if (!loggedUser) {
-      toast.error("Credenciais inválidas. Verifique seu RA e senha.");
-      return;
+      toast.success(`Bem-vindo(a), ${loggedUser.nome}!`);
+      navigate(loggedUser.tipo === "aluno" ? "/aluno" : "/funcionario", { replace: true });
+    } catch (e) {
+      toast.error("Erro ao autenticar. Tente novamente.");
     }
-
-    toast.success(`Bem-vindo(a), ${loggedUser.nome}!`);
-    navigate(loggedUser.tipo === "aluno" ? "/aluno" : "/funcionario", { replace: true });
   }
 
-  function handleRegister() {
+  async function handleRegister() {
     if (!fullName.trim()) {
       toast.error("Informe seu nome completo.");
       return;
     }
-    if (!ra.trim()) {
-      toast.error("Informe seu RA.");
+    if (!email.trim()) {
+      toast.error("Informe seu e-mail.");
       return;
     }
     if (!contact.trim()) {
@@ -62,27 +65,25 @@ export function LoginPage() {
       return;
     }
 
-    const result = register({
-      nome: fullName,
-      ra,
-      contato: contact,
-      senha: password,
-    });
+    try {
+      const result = await register({ nome: fullName, email, contato: contact, senha: password });
+      if (!result.ok) {
+        toast.error(result.error ?? "Não foi possível cadastrar.");
+        return;
+      }
 
-    if (!result.ok) {
-      toast.error(result.error ?? "Não foi possível cadastrar.");
-      return;
+      const loggedUser = await login(email, password);
+      if (!loggedUser) {
+        toast.success("Cadastro realizado com sucesso. Faça seu login.");
+        setMode("login");
+        return;
+      }
+
+      toast.success(`Cadastro realizado. Bem-vindo(a), ${loggedUser.nome}!`);
+      navigate("/aluno", { replace: true });
+    } catch (e) {
+      toast.error("Erro ao cadastrar. Tente novamente.");
     }
-
-    const loggedUser = login(ra, password);
-    if (!loggedUser) {
-      toast.success("Cadastro realizado com sucesso. Faça seu login.");
-      setMode("login");
-      return;
-    }
-
-    toast.success(`Cadastro realizado. Bem-vindo(a), ${loggedUser.nome}!`);
-    navigate("/aluno", { replace: true });
   }
 
   function switchMode(nextMode: "login" | "register") {
@@ -149,14 +150,14 @@ export function LoginPage() {
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
                 RA
               </label>
-              <input
-                type="text"
-                placeholder="Ex: 123456"
-                value={ra}
-                onChange={(e) => setRa(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (isRegister ? handleRegister() : handleLogin())}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-              />
+                <input
+                  type="text"
+                  placeholder="Ex: usuario@unasp.edu.br"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && (isRegister ? handleRegister() : handleLogin())}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+                />
             </div>
 
             {isRegister && (
@@ -232,10 +233,10 @@ export function LoginPage() {
             </div>
             <div className="space-y-1 text-xs text-blue-700">
               <p>
-                <span className="font-semibold">Aluno:</span> RA: <code className="rounded bg-blue-100 px-1">123456</code> | Senha: qualquer
+                <span className="font-semibold">Aluno:</span> E-mail: <code className="rounded bg-blue-100 px-1">aluno@unasp.local</code> | Senha: qualquer
               </p>
               <p>
-                <span className="font-semibold">Funcionário:</span> RA: <code className="rounded bg-blue-100 px-1">999999</code> | Senha: qualquer
+                <span className="font-semibold">Funcionário:</span> E-mail: <code className="rounded bg-blue-100 px-1">func@unasp.local</code> | Senha: qualquer
               </p>
               <p>
                 <span className="font-semibold">Novo aluno:</span> use a aba <strong>Cadastrar</strong> para criar sua conta.

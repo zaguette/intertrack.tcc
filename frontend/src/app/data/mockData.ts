@@ -3,6 +3,7 @@ import { PackageItem, User } from "../lib/types";
 type StoredUser = User & {
   senha: string;
   contato: string;
+  email?: string;
 };
 
 const USERS_KEY = "intertrack_users_v1";
@@ -90,17 +91,18 @@ export const mockPackages: PackageItem[] = [
 ];
 
 export function authenticateUser(ra: string, password: string): User | null {
-  const normalizedRa = ra.trim();
+  const identifier = ra.trim();
 
-  if (normalizedRa === "123456") {
+  // Accept either RA or email in the mock fallback
+  if (identifier === "123456" || identifier === "aluno@unasp.local") {
     return mockUsers[0];
   }
-  if (normalizedRa === "999999") {
+  if (identifier === "999999" || identifier === "func@unasp.local") {
     return mockUsers[1];
   }
 
   const storedUsers = getStoredUsers();
-  const found = storedUsers.find((user) => user.ra === normalizedRa);
+  const found = storedUsers.find((user) => (user.ra === identifier) || (user.email === identifier));
   if (!found) return null;
   if (found.senha !== password) return null;
 
