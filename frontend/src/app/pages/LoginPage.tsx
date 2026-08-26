@@ -12,12 +12,12 @@ export function LoginPage() {
   const isRegister = mode === "register";
 
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [ra, setRa] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // If already logged in, redirect
+  // Redireciona se o usuário já estiver autenticado
   useEffect(() => {
     if (user) {
       navigate(user.tipo === "aluno" ? "/aluno" : "/funcionario", { replace: true });
@@ -25,8 +25,8 @@ export function LoginPage() {
   }, [user, navigate]);
 
   async function handleLogin() {
-    if (!email.trim()) {
-      toast.error("Informe seu e-mail.");
+    if (!ra.trim()) {
+      toast.error("Informe seu RA.");
       return;
     }
     if (!password.trim()) {
@@ -34,9 +34,9 @@ export function LoginPage() {
       return;
     }
     try {
-      const loggedUser = await login(email, password);
+      const loggedUser = await login(ra, password);
       if (!loggedUser) {
-        toast.error("Credenciais inválidas. Verifique seu e-mail e senha.");
+        toast.error("Credenciais inválidas. Verifique seu RA e senha.");
         return;
       }
 
@@ -52,12 +52,12 @@ export function LoginPage() {
       toast.error("Informe seu nome completo.");
       return;
     }
-    if (!email.trim()) {
-      toast.error("Informe seu e-mail.");
+    if (!ra.trim()) {
+      toast.error("Informe seu RA.");
       return;
     }
     if (!contact.trim()) {
-      toast.error("Informe seu telefone ou e-mail.");
+      toast.error("Informe seu e-mail.");
       return;
     }
     if (!password.trim()) {
@@ -66,21 +66,27 @@ export function LoginPage() {
     }
 
     try {
-      const result = await register({ nome: fullName, email, contato: contact, senha: password });
+      const result = await register({ 
+        nome: fullName, 
+        ra: ra, 
+        email: contact, 
+        contato: contact, 
+        senha: password 
+      });
+
       if (!result.ok) {
-        toast.error(result.error ?? "Não foi possível cadastrar.");
+        // Mensagem genérica por segurança
+        toast.error("Não foi possível realizar o cadastro. As informações inseridas já possuem um vínculo no sistema.");
         return;
       }
 
-      const loggedUser = await login(email, password);
-      if (!loggedUser) {
-        toast.success("Cadastro realizado com sucesso. Faça seu login.");
-        setMode("login");
-        return;
-      }
+      // Notificação simulada no estilo aplicativo
+      toast.success("Conta criada com sucesso!", {
+        description: "Cadastro verificado e liberado no seu dispositivo. Faça login para continuar.",
+        duration: 5000,
+      });
 
-      toast.success(`Cadastro realizado. Bem-vindo(a), ${loggedUser.nome}!`);
-      navigate("/aluno", { replace: true });
+      switchMode("login");
     } catch (e) {
       toast.error("Erro ao cadastrar. Tente novamente.");
     }
@@ -90,6 +96,7 @@ export function LoginPage() {
     setMode(nextMode);
     setShowPassword(false);
     setPassword("");
+    setRa("");
 
     if (nextMode === "login") {
       setFullName("");
@@ -110,7 +117,7 @@ export function LoginPage() {
       <div className="relative z-10 w-full max-w-sm">
         <div className="rounded-2xl bg-white p-8 shadow-2xl">
           {/* Logo */}
-            <div className="mb-6 flex flex-col items-center gap-3">
+          <div className="mb-6 flex flex-col items-center gap-3">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-500 shadow-lg">
               <img src="/logounasp.png" alt="UNASP Logo" className="h-[5.5rem] w-[5.5rem] object-contain" />
             </div>
@@ -140,36 +147,46 @@ export function LoginPage() {
                   placeholder="Ex: João da Silva"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleRegister();
+                  }}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
                 />
               </div>
             )}
 
-            {/* RA / Usuário */}
+            {/* RA */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
                 RA
               </label>
-                <input
-                  type="text"
-                  placeholder="Ex: usuario@unasp.edu.br"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (isRegister ? handleRegister() : handleLogin())}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-                />
+              <input
+                type="text"
+                placeholder="Ex: 123456"
+                value={ra}
+                onChange={(e) => setRa(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    isRegister ? handleRegister() : handleLogin();
+                  }
+                }}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+              />
             </div>
 
             {isRegister && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Telefone ou e-mail
+                  E-mail
                 </label>
                 <input
-                  type="text"
-                  placeholder="Ex: (19) 99999-9999 ou aluno@email.com"
+                  type="email"
+                  placeholder="Ex: aluno@unasp.edu.br"
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleRegister();
+                  }}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
                 />
               </div>
@@ -184,7 +201,11 @@ export function LoginPage() {
                   placeholder="Digite sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (isRegister ? handleRegister() : handleLogin())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      isRegister ? handleRegister() : handleLogin();
+                    }
+                  }}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
                 />
                 <button
@@ -233,10 +254,10 @@ export function LoginPage() {
             </div>
             <div className="space-y-1 text-xs text-blue-700">
               <p>
-                <span className="font-semibold">Aluno:</span> E-mail: <code className="rounded bg-blue-100 px-1">aluno@unasp.local</code> | Senha: qualquer
+                <span className="font-semibold">Aluno:</span> RA: <code className="rounded bg-blue-100 px-1">123456</code> | Senha: qualquer
               </p>
               <p>
-                <span className="font-semibold">Funcionário:</span> E-mail: <code className="rounded bg-blue-100 px-1">func@unasp.local</code> | Senha: qualquer
+                <span className="font-semibold">Funcionário:</span> RA/E-mail: <code className="rounded bg-blue-100 px-1">func@unasp.local</code> | Senha: qualquer
               </p>
               <p>
                 <span className="font-semibold">Novo aluno:</span> use a aba <strong>Cadastrar</strong> para criar sua conta.

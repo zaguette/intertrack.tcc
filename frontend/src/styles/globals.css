@@ -3,13 +3,23 @@
 
 :root {
   color-scheme: light;
+  --unasp-orange: #F25922;
+}
+
+/* Classes utilitárias customizadas */
+.bg-unasp-orange {
+  background-color: var(--unasp-orange);
+}
+
+.text-unasp-orange {
+  color: var(--unasp-orange);
 }
 
 body {
   font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
-/* Hide browser-native password reveal icon to keep only the custom eye button */
+/* Oculta o ícone nativo de ver senha nos navegadores */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
   display: none;

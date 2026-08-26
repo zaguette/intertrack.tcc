@@ -14,7 +14,6 @@ function normalizeNotificationId(id: string) {
   if (deliveredLegacyMatch) {
     return `delivered:${deliveredLegacyMatch[1]}`;
   }
-
   return id;
 }
 
@@ -69,7 +68,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   const unreadCount = useMemo(
     () => {
       if (!readNotificationsHydrated) return 0;
-
       return notifications.filter((notification) => !isNotificationRead(notification)).length;
     },
     [notifications, readNotificationSet, readNotificationsHydrated]
@@ -151,7 +149,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
           )
         : [];
       setReadNotificationIds(normalized);
-
       localStorage.setItem(storageKey, JSON.stringify(normalized));
     } catch {
       setReadNotificationIds([]);
@@ -197,7 +194,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
 
     setReadNotificationIds((prev) => {
       const nextSet = new Set(prev);
-
       packageIds.forEach((packageId) => {
         nextSet.add(`pkg:${packageId}`);
         nextSet.add(`available:${packageId}`);
@@ -218,7 +214,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   function handleToggleNotifications() {
     setNotificationsOpen((current) => {
       const next = !current;
-
       if (next) {
         setReadNotificationIds((prev) => {
           const merged = new Set(prev);
@@ -234,7 +229,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
           return nextIds;
         });
       }
-
       return next;
     });
   }
@@ -314,7 +308,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
       if (storageKey) {
         localStorage.setItem(storageKey, JSON.stringify(nextIds));
       }
-
       return nextIds;
     });
   }, [notificationsOpen, notifications]);
@@ -332,7 +325,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--topbar-bg)] px-4 py-3 shadow-[0_4px_24px_rgba(0,0,0,0.06)] text-white">
+    <header className="sticky top-0 z-40 bg-[var(--topbar-bg)] px-4 py-3 text-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] transition-colors">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-3">
           <button

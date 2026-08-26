@@ -16,7 +16,13 @@ interface AppContextType {
   packages: PackageItem[];
   theme: "light" | "dark";
   login: (ra: string, password: string) => Promise<User | null>;
-  register: (payload: { nome: string; email?: string; ra?: string; contato: string; senha: string }) => Promise<{ ok: boolean; error?: string }>;
+  register: (payload: { 
+    nome: string; 
+    ra: string; 
+    email: string; 
+    senha: string; 
+    contato?: string; 
+  }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   addPackage: (pkg: PackageItem) => void;
   updatePackage: (id: string, updates: Partial<PackageItem>) => void;
@@ -86,7 +92,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async function loadPackages() {
       const storedPackages = getStoredPackages().map(normalizePackage);
 
-      // If there is an API token in localStorage, try fetching from backend first
       try {
         const apiResp = await fetchPackagesFromApi();
         if (Array.isArray(apiResp) && apiResp.length > 0) {
@@ -94,7 +99,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (e) {
-        // ignore and fallback to local
+        // Fallback local
       }
 
       if (storedPackages.length === 0) {
@@ -137,7 +142,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function login(ra: string, _password: string): Promise<User | null> {
-    // Try server authentication first (email)
     try {
       const resp = await apiLogin(ra, _password);
       const serverUser = resp.user;
@@ -158,7 +162,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveSession(mapped);
       return mapped;
     } catch (e) {
-      // Fallback to local/mock authentication (accept ra or email)
       const found = authenticateUser(ra, _password);
       if (!found) return null;
 
@@ -173,18 +176,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function register(payload: { nome: string; email?: string; ra?: string; contato: string; senha: string }) {
-    // Try server registration first (email-based)
-    if (payload.email) {
-      try {
-        await apiRegister({ nome: payload.nome, email: payload.email, senha: payload.senha, telefone: payload.contato });
-        return { ok: true };
-      } catch (e: any) {
-        // fallthrough to local register
+  async function register(payload: { 
+    nome: string; 
+    ra: string; 
+    email: string; 
+    senha: string; 
+    contato?: string; 
+  }) {
+    // 1. Tenta autenticação no backend via API
+    try {
+      await apiRegister({ 
+        nome: payload.nome, 
+        email: payload.email, 
+        senha: payload.senha, 
+        telefone: payload.contato ?? payload.email 
+      });
+      return { ok: true };
+    } catch (e: any) {
+      // Se a API retornar erro de duplicidade específico, propaga
+      if (e?.response?.data?.message) {
+        return { ok: false, error: e.response.data.message };
       }
     }
 
-    const result = registerUser(payload as any);
+    // 2. Fallback para cadastro local (mockData) caso a API não esteja rodando
+    const result = registerUser({
+      nome: payload.nome,
+      ra: payload.ra,
+      email: payload.email,
+      contato: payload.email,
+      senha: payload.senha,
+    } as any);
+
     if (!result.ok) {
       return { ok: false, error: result.error };
     }
