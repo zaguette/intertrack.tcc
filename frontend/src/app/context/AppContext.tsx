@@ -8,7 +8,14 @@ import {
   savePackages,
   saveSession,
 } from "../lib/storage";
-import { fetchPackages as fetchPackagesFromApi, apiLogin, apiRegister } from "../lib/api";
+import { 
+  fetchPackages as fetchPackagesFromApi, 
+  apiLogin, 
+  apiRegister,
+  createPackage,
+  updatePackageStatus,
+  deletePackage as apiDeletePackage
+} from "../lib/api";
 import { PackageItem, PackageStatus, User } from "../lib/types";
 
 interface AppContextType {
@@ -24,9 +31,9 @@ interface AppContextType {
     contato?: string; 
   }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  addPackage: (pkg: PackageItem) => void;
-  updatePackage: (id: string, updates: Partial<PackageItem>) => void;
-  deletePackage: (id: string) => void;
+  addPackage: (pkg: PackageItem) => Promise<void>;
+  updatePackage: (id: string, updates: Partial<PackageItem>) => Promise<void>;
+  deletePackage: (id: string) => Promise<void>;
   toggleTheme: () => void;
 }
 
@@ -99,7 +106,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (e) {
-        // Fallback local
+        // Fallback local caso a API não responda
       }
 
       if (storedPackages.length === 0) {
@@ -183,7 +190,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     senha: string; 
     contato?: string; 
   }) {
-    // 1. Tenta autenticação no backend via API
     try {
       await apiRegister({ 
         nome: payload.nome, 
@@ -193,13 +199,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       return { ok: true };
     } catch (e: any) {
-      // Se a API retornar erro de duplicidade específico, propaga
       if (e?.response?.data?.message) {
         return { ok: false, error: e.response.data.message };
       }
     }
 
-    // 2. Fallback para cadastro local (mockData) caso a API não esteja rodando
     const result = registerUser({
       nome: payload.nome,
       ra: payload.ra,
@@ -220,23 +224,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
-  function addPackage(pkg: PackageItem) {
-    setPackages((prev) => [normalizePackage(pkg), ...prev]);
+  async function addPackage(pkg: PackageItem) {
+    try {
+      const apiResponse = await createPackage(pkg);
+      setPackages((prev) => [normalizePackage(apiResponse), ...prev]);
+    } catch (error) {
+      console.error("Erro ao cadastrar encomenda na API:", error);
+      setPackages((prev) => [normalizePackage(pkg), ...prev]);
+    }
   }
 
-  function updatePackage(id: string, updates: Partial<PackageItem>) {
-    const normalizedUpdates = {
-      ...updates,
-      status: updates.status ? normalizeStatus(updates.status) : updates.status,
-    };
-
-    setPackages((prev) =>
-      prev.map((p) => (p.id === id ? normalizePackage({ ...p, ...normalizedUpdates }) : p))
-    );
+  async function updatePackage(id: string, updates: Partial<PackageItem>) {
+    try {
+      if (updates.status) {
+        await updatePackageStatus(id, updates.status);
+      }
+      setPackages((prev) =>
+        prev.map((p) => (p.id === id ? normalizePackage({ ...p, ...updates }) : p))
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar status na API:", error);
+    }
   }
 
-  function deletePackage(id: string) {
-    setPackages((prev) => prev.filter((p) => p.id !== id));
+  async function deletePackage(id: string) {
+    try {
+      await apiDeletePackage(id);
+      setPackages((prev) => prev.filter((p) => p.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar encomenda na API:", error);
+    }
   }
 
   function toggleTheme() {

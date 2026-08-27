@@ -69,12 +69,12 @@ export async function createPackage(pkg: any) {
   return res.json();
 }
 
-export async function updatePackageStatus(id: string, status: string) {
+export async function updatePackageStatus(id: string, statusAtualId: string) {
   const headersPatch: Record<string, string> = { "Content-Type": "application/json", ...getAuthHeader() };
   const res = await fetch(`${API_PREFIX}/encomendas/${id}/status`, {
     method: "PATCH",
     headers: headersPatch,
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status_atual_id: statusAtualId }),
   });
 
   if (!res.ok) throw new Error("Failed to update status");
