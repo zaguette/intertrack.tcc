@@ -1,16 +1,15 @@
 -- CreateTable
 CREATE TABLE `Usuario` (
     `id` CHAR(36) NOT NULL,
-    `codigo` VARCHAR(191) NOT NULL,
+    `RA` VARCHAR(191) NOT NULL,
     `nome` VARCHAR(100) NOT NULL,
     `email` VARCHAR(100) NOT NULL,
     `senha` VARCHAR(255) NOT NULL,
-    `telefone` VARCHAR(30) NULL,
     `ativo` BOOLEAN NOT NULL DEFAULT true,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `Usuario_codigo_key`(`codigo`),
+    UNIQUE INDEX `Usuario_RA_key`(`RA`),
     UNIQUE INDEX `Usuario_email_key`(`email`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

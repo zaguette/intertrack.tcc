@@ -1,4 +1,4 @@
-import { CalendarDays, Package, PackageCheck, UserRound } from "lucide-react";
+import { Package, PackageCheck, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { StudentLayout } from "../../components/StudentLayout";
@@ -7,7 +7,6 @@ import { Card } from "../../components/ui/Card";
 
 type StudentProfileData = {
   fullName: string;
-  birthDate: string;
   ra: string;
 };
 
@@ -21,7 +20,6 @@ export function StudentPerfil() {
 
   const [profile, setProfile] = useState<StudentProfileData>({
     fullName: user?.nome ?? "",
-    birthDate: "",
     ra: user?.ra ?? "",
   });
   const [draft, setDraft] = useState<StudentProfileData>(profile);
@@ -32,7 +30,6 @@ export function StudentPerfil() {
 
     const fallback: StudentProfileData = {
       fullName: user.nome ?? user.name ?? "",
-      birthDate: "",
       ra: user.ra,
     };
 
@@ -47,7 +44,6 @@ export function StudentPerfil() {
       const parsed = JSON.parse(raw) as StudentProfileData;
       const normalized: StudentProfileData = {
         fullName: parsed.fullName || fallback.fullName,
-        birthDate: parsed.birthDate || "",
         ra: parsed.ra || fallback.ra,
       };
       setProfile(normalized);
@@ -57,12 +53,6 @@ export function StudentPerfil() {
       setDraft(fallback);
     }
   }, [user]);
-
-  function formatBirthDate(date: string) {
-    if (!date) return "Não informado";
-    const [year, month, day] = date.split("-");
-    return `${day}/${month}/${year}`;
-  }
 
   function handleSaveProfile() {
     if (!user?.ra) return;
@@ -77,7 +67,6 @@ export function StudentPerfil() {
 
     const nextProfile: StudentProfileData = {
       fullName: draft.fullName.trim(),
-      birthDate: draft.birthDate,
       ra: draft.ra.trim(),
     };
 
@@ -140,7 +129,7 @@ export function StudentPerfil() {
             )}
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4 sm:col-span-2">
               <p className="text-xs uppercase tracking-wide text-[var(--muted-text)]">Nome completo</p>
               {isEditing ? (
@@ -155,24 +144,7 @@ export function StudentPerfil() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-text)]">
-                <CalendarDays size={16} />
-                Data de nascimento
-              </div>
-              {isEditing ? (
-                <input
-                  type="date"
-                  value={draft.birthDate}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, birthDate: e.target.value }))}
-                  className="mt-2 w-full rounded-lg border border-[var(--app-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm text-[var(--app-text)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-              ) : (
-                <p className="mt-2 text-sm text-[var(--muted-text)]">{formatBirthDate(profile.birthDate)}</p>
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4">
+            <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4 sm:col-span-2">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-text)]">
                 <UserRound size={16} />
                 RA
@@ -196,6 +168,7 @@ export function StudentPerfil() {
               </div>
               <p className="mt-2 text-2xl font-bold text-[var(--app-text)]">{myPackages.length}</p>
             </div>
+
             <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-text)]">
                 <PackageCheck size={16} />

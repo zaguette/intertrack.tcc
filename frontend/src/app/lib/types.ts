@@ -44,3 +44,11 @@ export type PackageItem = {
   // common
   status: PackageStatus;
 };
+
+export type RegisterPayload = {
+  nome: string;
+  ra: string;
+  email: string;
+  senha: string;
+  contato?: string;
+};

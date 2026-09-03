@@ -8,7 +8,14 @@ import {
   savePackages,
   saveSession,
 } from "../lib/storage";
-import { fetchPackages as fetchPackagesFromApi, apiLogin, apiRegister } from "../lib/api";
+import { 
+  fetchPackages as fetchPackagesFromApi, 
+  apiLogin, 
+  apiRegister,
+  createPackage,
+  updatePackageStatus,
+  deletePackage as apiDeletePackage
+} from "../lib/api";
 import { PackageItem, PackageStatus, User } from "../lib/types";
 
 interface AppContextType {
@@ -16,11 +23,17 @@ interface AppContextType {
   packages: PackageItem[];
   theme: "light" | "dark";
   login: (ra: string, password: string) => Promise<User | null>;
-  register: (payload: { nome: string; email?: string; ra?: string; contato: string; senha: string }) => Promise<{ ok: boolean; error?: string }>;
+  register: (payload: { 
+    nome: string; 
+    ra: string; 
+    email: string; 
+    senha: string; 
+    contato?: string; 
+  }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  addPackage: (pkg: PackageItem) => void;
-  updatePackage: (id: string, updates: Partial<PackageItem>) => void;
-  deletePackage: (id: string) => void;
+  addPackage: (pkg: PackageItem) => Promise<void>;
+  updatePackage: (id: string, updates: Partial<PackageItem>) => Promise<void>;
+  deletePackage: (id: string) => Promise<void>;
   toggleTheme: () => void;
 }
 
@@ -86,7 +99,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     async function loadPackages() {
       const storedPackages = getStoredPackages().map(normalizePackage);
 
-      // If there is an API token in localStorage, try fetching from backend first
       try {
         const apiResp = await fetchPackagesFromApi();
         if (Array.isArray(apiResp) && apiResp.length > 0) {
@@ -94,7 +106,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (e) {
-        // ignore and fallback to local
+        // Fallback local caso a API não responda
       }
 
       if (storedPackages.length === 0) {
@@ -137,7 +149,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function login(ra: string, _password: string): Promise<User | null> {
-    // Try server authentication first (email)
     try {
       const resp = await apiLogin(ra, _password);
       const serverUser = resp.user;
@@ -158,7 +169,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveSession(mapped);
       return mapped;
     } catch (e) {
-      // Fallback to local/mock authentication (accept ra or email)
       const found = authenticateUser(ra, _password);
       if (!found) return null;
 
@@ -173,18 +183,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function register(payload: { nome: string; email?: string; ra?: string; contato: string; senha: string }) {
-    // Try server registration first (email-based)
-    if (payload.email) {
-      try {
-        await apiRegister({ nome: payload.nome, email: payload.email, senha: payload.senha, telefone: payload.contato });
-        return { ok: true };
-      } catch (e: any) {
-        // fallthrough to local register
+  async function register(payload: { 
+    nome: string; 
+    ra: string; 
+    email: string; 
+    senha: string; 
+    contato?: string; 
+  }) {
+    try {
+      await apiRegister({ 
+        nome: payload.nome, 
+        email: payload.email, 
+        senha: payload.senha, 
+        telefone: payload.contato ?? payload.email 
+      });
+      return { ok: true };
+    } catch (e: any) {
+      if (e?.response?.data?.message) {
+        return { ok: false, error: e.response.data.message };
       }
     }
 
-    const result = registerUser(payload as any);
+    const result = registerUser({
+      nome: payload.nome,
+      ra: payload.ra,
+      email: payload.email,
+      contato: payload.email,
+      senha: payload.senha,
+    } as any);
+
     if (!result.ok) {
       return { ok: false, error: result.error };
     }
@@ -197,23 +224,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
-  function addPackage(pkg: PackageItem) {
-    setPackages((prev) => [normalizePackage(pkg), ...prev]);
+  async function addPackage(pkg: PackageItem) {
+    try {
+      const apiResponse = await createPackage(pkg);
+      setPackages((prev) => [normalizePackage(apiResponse), ...prev]);
+    } catch (error) {
+      console.error("Erro ao cadastrar encomenda na API:", error);
+      setPackages((prev) => [normalizePackage(pkg), ...prev]);
+    }
   }
 
-  function updatePackage(id: string, updates: Partial<PackageItem>) {
-    const normalizedUpdates = {
-      ...updates,
-      status: updates.status ? normalizeStatus(updates.status) : updates.status,
-    };
-
-    setPackages((prev) =>
-      prev.map((p) => (p.id === id ? normalizePackage({ ...p, ...normalizedUpdates }) : p))
-    );
+  async function updatePackage(id: string, updates: Partial<PackageItem>) {
+    try {
+      if (updates.status) {
+        await updatePackageStatus(id, updates.status);
+      }
+      setPackages((prev) =>
+        prev.map((p) => (p.id === id ? normalizePackage({ ...p, ...updates }) : p))
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar status na API:", error);
+    }
   }
 
-  function deletePackage(id: string) {
-    setPackages((prev) => prev.filter((p) => p.id !== id));
+  async function deletePackage(id: string) {
+    try {
+      await apiDeletePackage(id);
+      setPackages((prev) => prev.filter((p) => p.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar encomenda na API:", error);
+    }
   }
 
   function toggleTheme() {
