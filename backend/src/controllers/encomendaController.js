@@ -21,18 +21,23 @@ export const encomendaController = {
     }
   },
 
-  async list(req, res) {
+async list(req, res) {
     try {
-      const { busca } = req.query;
+        const { busca } = req.query;
 
-      const encomendas = await listarEncomendas(busca);
+        const encomendas = await listarEncomendas(
+            busca,
+            req.user.id,
+            req.user.tipo
+        );
 
-      res.json(encomendas);
+        res.json(encomendas);
 
-    } catch (error) {
-      res.status(500).json({ erro: error.message });
-    }
-  },
+   } catch (error) {
+  console.error("ERRO AO LISTAR ENCOMENDAS:", error);
+  res.status(500).json({ erro: error.message });
+}
+},
 
   async getById(req, res) {
     try {

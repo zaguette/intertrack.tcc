@@ -37,8 +37,11 @@ export async function apiLogin(email: string, senha: string) {
   }
 
   const data = await res.json();
-  // data: { auth: true, token, user }
-  if (data.token) await setApiToken(data.token);
+
+  if (data.token) {
+    await setApiToken(data.token);
+  }
+
   return data;
 }
 

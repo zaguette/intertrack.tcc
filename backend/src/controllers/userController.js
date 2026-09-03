@@ -54,28 +54,20 @@ export const userController = {
     }
 },
 
-    // =========================
-    // LOGIN
-    // =========================
-    async login(req, res) {
+ async login(req, res) {
+    try {
+        const { email, senha } = req.body;
 
-        try {
-
-            const { email, senha } = req.body;
-
-            const usuario = await prisma.usuario.findUnique({
-                where: {
-                    email
-                }
-            });
-
-            if (!usuario) {
-                return res.status(401).json({
-                    erro: "E-mail ou senha inválidos."
-                });
+        // ==========================================
+        // TENTA LOGIN COMO USUÁRIO/ALUNO
+        // ==========================================
+        const usuario = await prisma.usuario.findUnique({
+            where: {
+                email
             }
+        });
 
-            // Impede login de usuários desativados
+        if (usuario) {
             if (!usuario.ativo) {
                 return res.status(403).json({
                     erro: "Usuário desativado."
@@ -96,7 +88,8 @@ export const userController = {
             const token = jwt.sign(
                 {
                     id: usuario.id,
-                    email: usuario.email
+                    email: usuario.email,
+                    tipo: "aluno"
                 },
                 JWT_SECRET,
                 {
@@ -110,22 +103,77 @@ export const userController = {
                 user: {
                     id: usuario.id,
                     nome: usuario.nome,
-                    email: usuario.email
+                    email: usuario.email,
+                    tipo: "aluno"
                 }
             });
-
-        } catch (error) {
-
-            console.error(error);
-
-            return res.status(500).json({
-                erro: "Erro interno do servidor."
-            });
-
         }
 
-    },
- // LISTAR TODOS OS USUÁRIOS
+        // ==========================================
+        // TENTA LOGIN COMO FUNCIONÁRIO
+        // ==========================================
+        const funcionario = await prisma.funcionario.findUnique({
+            where: {
+                email
+            }
+        });
+
+        if (funcionario) {
+            if (!funcionario.ativo) {
+                return res.status(403).json({
+                    erro: "Funcionário desativado."
+                });
+            }
+
+            const senhaValida = await bcrypt.compare(
+                senha,
+                funcionario.senha
+            );
+
+            if (!senhaValida) {
+                return res.status(401).json({
+                    erro: "E-mail ou senha inválidos."
+                });
+            }
+
+            const token = jwt.sign(
+                {
+                    id: funcionario.id,
+                    email: funcionario.email,
+                    tipo: "funcionario",
+                    cargo: funcionario.cargo
+                },
+                JWT_SECRET,
+                {
+                    expiresIn: "8h"
+                }
+            );
+
+            return res.json({
+                auth: true,
+                token,
+                user: {
+                    id: funcionario.id,
+                    nome: funcionario.nome,
+                    email: funcionario.email,
+                    tipo: "funcionario",
+                    cargo: funcionario.cargo
+                }
+            });
+        }
+
+        return res.status(401).json({
+            erro: "E-mail ou senha inválidos."
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            erro: "Erro interno do servidor."
+        });
+    }
+},
 // LISTAR TODOS OS USUÁRIOS
 async findAll(req, res) {
     try {

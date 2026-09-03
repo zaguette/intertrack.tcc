@@ -114,7 +114,7 @@ export function StaffGerenciar() {
                     <td className="whitespace-nowrap px-5 py-4 font-medium text-gray-900">{pkg.codigo}</td>
                     <td className="px-5 py-4 text-gray-700">{pkg.aluno}</td>
                     <td className="px-5 py-4 text-gray-500">{pkg.ra}</td>
-                    <td className="whitespace-nowrap px-5 py-4 text-gray-500">{formatDate(pkg.dataChegada)}</td>
+                    <td className="whitespace-nowrap px-5 py-4 text-gray-500">{formatDate(pkg.dataChegada ?? "")}</td>
                     <td className="px-5 py-4">
                       <StatusBadge status={pkg.status} />
                     </td>

@@ -48,29 +48,48 @@ export const criarEncomenda = async (dados, funcionario_id) => {
   });
 };
 
-export const listarEncomendas = async (busca) => {
-  return await prisma.encomenda.findMany({
-    where: busca
-      ? {
-          OR: [
-            {
-              codigo_rastreio: {
-                contains: busca,
-                mode: "insensitive"
-              }
-            },
+export const listarEncomendas = async (
+  busca,
+  usuario_id,
+  tipo
+) => {
 
-            {
-              destinatario: {
-                nome: {
-                  contains: busca,
-                  mode: "insensitive"
-                }
-              }
-            }
-          ]
+  const where = {};
+
+  // ==========================================
+  // FILTRO DE ACESSO
+  // ==========================================
+
+  // Se for aluno, só pode ver suas próprias encomendas
+  if (tipo === "aluno") {
+    where.destinatario_usuario_id = usuario_id;
+  }
+
+  // ==========================================
+  // FILTRO DE BUSCA
+  // ==========================================
+
+  if (busca) {
+    where.OR = [
+      {
+        codigo_rastreio: {
+          contains: busca,
+          mode: "insensitive"
         }
-      : {},
+      },
+      {
+        destinatario: {
+          nome: {
+            contains: busca,
+            mode: "insensitive"
+          }
+        }
+      }
+    ];
+  }
+
+  return await prisma.encomenda.findMany({
+    where,
 
     include: {
       statusAtual: true,

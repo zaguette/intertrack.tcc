@@ -95,7 +95,7 @@ export function StudentDashboard() {
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
                     <Calendar size={12} />
-                    <span>{formatDate(pkg.dataChegada)}</span>
+                    <span>{formatDate(pkg.dataChegada ?? "")}</span>
                   </div>
                   <div className="mt-3">
                     <StatusBadge status={pkg.status} />
