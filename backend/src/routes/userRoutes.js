@@ -16,6 +16,7 @@ router.post("/register", userController.create);
 // Login
 router.post("/login", userController.login);
 
+
 // =========================
 // ROTAS PROTEGIDAS
 // =========================
@@ -27,5 +28,21 @@ router.get("/perfil", verificarToken, (req, res) => {
         usuario: req.user
     });
 });
+
+// =========================
+// CRUD DE USUÁRIOS
+// =========================
+
+// Listar todos os usuários
+router.get("/", verificarToken, userController.findAll);
+
+// Buscar usuário por ID
+router.get("/:id", verificarToken, userController.findById);
+
+// Atualizar usuário
+router.put("/:id", verificarToken, userController.update);
+
+// Desativar usuário
+router.delete("/:id", verificarToken, userController.delete);
 
 export default router;

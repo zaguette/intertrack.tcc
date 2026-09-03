@@ -279,5 +279,61 @@ async update(req, res) {
     }
 
 },
+// =========================
+// DESATIVAR USUÁRIO
+// =========================
+async delete(req, res) {
 
+    try {
+
+        const { id } = req.params;
+
+        // Verifica se o usuário existe
+        const usuario = await prisma.usuario.findUnique({
+            where: {
+                id
+            }
+        });
+
+        if (!usuario) {
+            return res.status(404).json({
+                erro: "Usuário não encontrado."
+            });
+        }
+
+        // Desativa o usuário
+        const usuarioDesativado = await prisma.usuario.update({
+            where: {
+                id
+            },
+            data: {
+                ativo: false
+            },
+            select: {
+                id: true,
+                codigo: true,
+                nome: true,
+                email: true,
+                telefone: true,
+                ativo: true,
+                updated_at: true
+            }
+        });
+
+        return res.status(200).json({
+            mensagem: "Usuário desativado com sucesso!",
+            usuario: usuarioDesativado
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            erro: "Erro ao desativar usuário."
+        });
+
+    }
+
+}
 };
