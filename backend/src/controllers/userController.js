@@ -11,377 +11,391 @@ export const userController = {
     // CADASTRO DE USUÁRIO
     // =========================
     async create(req, res) {
-    try {
+        try {
 
-        const { nome, email, senha, telefone } = req.body;
+            const { ra, nome, email, senha, telefone } = req.body;
 
-        const usuarioExiste = await prisma.usuario.findUnique({
-            where: {
-                email
+            const usuarioExiste = await prisma.usuario.findUnique({
+                where: {
+                    email
+                }
+            });
+
+            if (usuarioExiste) {
+                return res.status(409).json({
+                    erro: "E-mail já cadastrado."
+                });
             }
-        });
 
-        if (usuarioExiste) {
-            return res.status(409).json({
-                erro: "E-mail já cadastrado."
+            const raExiste = await prisma.usuario.findUnique({
+                where: {
+                    ra
+                }
+            });
+
+            if (raExiste) {
+                return res.status(409).json({
+                    erro: "RA já cadastrado."
+                });
+            }
+
+            const hashedPassword = await bcrypt.hash(senha, 10);
+
+            await prisma.usuario.create({
+                data: {
+                    id: uuidv4(),
+                    ra,
+                    nome,
+                    email,
+                    senha: hashedPassword,
+                    telefone
+                }
+            });
+
+            return res.status(201).json({
+                mensagem: "Usuário criado com sucesso!"
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(400).json({
+                erro: "Erro ao cadastrar usuário."
+            });
+
+        }
+    },
+
+    // =========================
+    // LOGIN
+    // =========================
+    async login(req, res) {
+        try {
+            const { email, senha } = req.body;
+
+            // ==========================================
+            // TENTA LOGIN COMO USUÁRIO/ALUNO
+            // ==========================================
+            const usuario = await prisma.usuario.findUnique({
+                where: {
+                    email
+                }
+            });
+
+            if (usuario) {
+                if (!usuario.ativo) {
+                    return res.status(403).json({
+                        erro: "Usuário desativado."
+                    });
+                }
+
+                const senhaValida = await bcrypt.compare(
+                    senha,
+                    usuario.senha
+                );
+
+                if (!senhaValida) {
+                    return res.status(401).json({
+                        erro: "E-mail ou senha inválidos."
+                    });
+                }
+
+                const token = jwt.sign(
+                    {
+                        id: usuario.id,
+                        email: usuario.email,
+                        tipo: "aluno"
+                    },
+                    JWT_SECRET,
+                    {
+                        expiresIn: "8h"
+                    }
+                );
+
+                return res.json({
+                    auth: true,
+                    token,
+                    user: {
+                        id: usuario.id,
+                        nome: usuario.nome,
+                        email: usuario.email,
+                        tipo: "aluno"
+                    }
+                });
+            }
+
+            // ==========================================
+            // TENTA LOGIN COMO FUNCIONÁRIO
+            // ==========================================
+            const funcionario = await prisma.funcionario.findUnique({
+                where: {
+                    email
+                }
+            });
+
+            if (funcionario) {
+                if (!funcionario.ativo) {
+                    return res.status(403).json({
+                        erro: "Funcionário desativado."
+                    });
+                }
+
+                const senhaValida = await bcrypt.compare(
+                    senha,
+                    funcionario.senha
+                );
+
+                if (!senhaValida) {
+                    return res.status(401).json({
+                        erro: "E-mail ou senha inválidos."
+                    });
+                }
+
+                const token = jwt.sign(
+                    {
+                        id: funcionario.id,
+                        email: funcionario.email,
+                        tipo: "funcionario",
+                        cargo: funcionario.cargo
+                    },
+                    JWT_SECRET,
+                    {
+                        expiresIn: "8h"
+                    }
+                );
+
+                return res.json({
+                    auth: true,
+                    token,
+                    user: {
+                        id: funcionario.id,
+                        nome: funcionario.nome,
+                        email: funcionario.email,
+                        tipo: "funcionario",
+                        cargo: funcionario.cargo
+                    }
+                });
+            }
+
+            return res.status(401).json({
+                erro: "E-mail ou senha inválidos."
+            });
+
+        } catch (error) {
+            console.error(error);
+
+            return res.status(500).json({
+                erro: "Erro interno do servidor."
             });
         }
+    },
 
-        const hashedPassword = await bcrypt.hash(senha, 10);
+    // =========================
+    // LISTAR TODOS OS USUÁRIOS
+    // =========================
+    async findAll(req, res) {
+        try {
 
-        await prisma.usuario.create({
-            data: {
-                id: uuidv4(),
-                nome,
-                email,
-                senha: hashedPassword,
-                telefone
-            }
-        });
-
-        return res.status(201).json({
-            mensagem: "Usuário criado com sucesso!"
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        return res.status(400).json({
-            erro: "Erro ao cadastrar usuário."
-        });
-
-    }
-},
-
- async login(req, res) {
-    try {
-        const { email, senha } = req.body;
-
-        // ==========================================
-        // TENTA LOGIN COMO USUÁRIO/ALUNO
-        // ==========================================
-        const usuario = await prisma.usuario.findUnique({
-            where: {
-                email
-            }
-        });
-
-        if (usuario) {
-            if (!usuario.ativo) {
-                return res.status(403).json({
-                    erro: "Usuário desativado."
-                });
-            }
-
-            const senhaValida = await bcrypt.compare(
-                senha,
-                usuario.senha
-            );
-
-            if (!senhaValida) {
-                return res.status(401).json({
-                    erro: "E-mail ou senha inválidos."
-                });
-            }
-
-            const token = jwt.sign(
-                {
-                    id: usuario.id,
-                    email: usuario.email,
-                    tipo: "aluno"
+            const usuarios = await prisma.usuario.findMany({
+                orderBy: {
+                    created_at: "desc"
                 },
-                JWT_SECRET,
-                {
-                    expiresIn: "8h"
-                }
-            );
-
-            return res.json({
-                auth: true,
-                token,
-                user: {
-                    id: usuario.id,
-                    nome: usuario.nome,
-                    email: usuario.email,
-                    tipo: "aluno"
+                select: {
+                    id: true,
+                    codigo: true,
+                    nome: true,
+                    email: true,
+                    telefone: true,
+                    ativo: true,
+                    created_at: true
                 }
             });
+
+            return res.status(200).json(usuarios);
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({
+                erro: "Erro ao listar usuários."
+            });
+
         }
+    },
 
-        // ==========================================
-        // TENTA LOGIN COMO FUNCIONÁRIO
-        // ==========================================
-        const funcionario = await prisma.funcionario.findUnique({
-            where: {
-                email
-            }
-        });
+    // =========================
+    // BUSCAR USUÁRIO POR ID
+    // =========================
+    async findById(req, res) {
 
-        if (funcionario) {
-            if (!funcionario.ativo) {
-                return res.status(403).json({
-                    erro: "Funcionário desativado."
-                });
-            }
+        try {
 
-            const senhaValida = await bcrypt.compare(
-                senha,
-                funcionario.senha
-            );
+            const { id } = req.params;
 
-            if (!senhaValida) {
-                return res.status(401).json({
-                    erro: "E-mail ou senha inválidos."
-                });
-            }
-
-            const token = jwt.sign(
-                {
-                    id: funcionario.id,
-                    email: funcionario.email,
-                    tipo: "funcionario",
-                    cargo: funcionario.cargo
+            const usuario = await prisma.usuario.findUnique({
+                where: {
+                    id
                 },
-                JWT_SECRET,
-                {
-                    expiresIn: "8h"
-                }
-            );
-
-            return res.json({
-                auth: true,
-                token,
-                user: {
-                    id: funcionario.id,
-                    nome: funcionario.nome,
-                    email: funcionario.email,
-                    tipo: "funcionario",
-                    cargo: funcionario.cargo
+                select: {
+                    id: true,
+                    codigo: true,
+                    nome: true,
+                    email: true,
+                    telefone: true,
+                    ativo: true,
+                    created_at: true,
+                    updated_at: true
                 }
             });
-        }
 
-        return res.status(401).json({
-            erro: "E-mail ou senha inválidos."
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            erro: "Erro interno do servidor."
-        });
-    }
-},
-// LISTAR TODOS OS USUÁRIOS
-async findAll(req, res) {
-    try {
-
-        const usuarios = await prisma.usuario.findMany({
-            orderBy: {
-                created_at: "desc"
-            },
-            select: {
-                id: true,
-                codigo: true,
-                nome: true,
-                email: true,
-                telefone: true,
-                ativo: true,
-                created_at: true
+            if (!usuario) {
+                return res.status(404).json({
+                    erro: "Usuário não encontrado."
+                });
             }
-        });
 
-        return res.status(200).json(usuarios);
+            return res.status(200).json(usuario);
 
-    } catch (error) {
+        } catch (error) {
 
-        console.error(error);
+            console.error(error);
 
-        return res.status(500).json({
-            erro: "Erro ao listar usuários."
-        });
-
-    }
-},
-// =========================
-// BUSCAR USUÁRIO POR ID
-// =========================
-async findById(req, res) {
-
-    try {
-
-        const { id } = req.params;
-
-        const usuario = await prisma.usuario.findUnique({
-            where: {
-                id
-            },
-            select: {
-                id: true,
-                codigo: true,
-                nome: true,
-                email: true,
-                telefone: true,
-                ativo: true,
-                created_at: true,
-                updated_at: true
-            }
-        });
-
-        if (!usuario) {
-            return res.status(404).json({
-                erro: "Usuário não encontrado."
+            return res.status(500).json({
+                erro: "Erro ao buscar usuário."
             });
         }
 
-        return res.status(200).json(usuario);
+    },
 
-    } catch (error) {
+    // =========================
+    // ATUALIZAR USUÁRIO
+    // =========================
+    async update(req, res) {
 
-        console.error(error);
+        try {
 
-        return res.status(500).json({
-            erro: "Erro ao buscar usuário."
-        });
-    }
+            const { id } = req.params;
 
-    },// =========================
-// ATUALIZAR USUÁRIO
-// =========================
-async update(req, res) {
+            const { nome, email, telefone, senha } = req.body;
 
-    try {
-
-        const { id } = req.params;
-
-        const { nome, email, telefone, senha } = req.body;
-
-
-        const usuario = await prisma.usuario.findUnique({
-            where: {
-                id
-            }
-        });
-
-
-        if (!usuario) {
-            return res.status(404).json({
-                erro: "Usuário não encontrado."
+            const usuario = await prisma.usuario.findUnique({
+                where: {
+                    id
+                }
             });
-        }
 
-
-        let senhaAtualizada = usuario.senha;
-
-
-        // Caso o usuário queira trocar a senha
-        if (senha) {
-
-            senhaAtualizada = await bcrypt.hash(senha, 10);
-
-        }
-
-
-        const usuarioAtualizado = await prisma.usuario.update({
-
-            where: {
-                id
-            },
-
-            data: {
-                nome,
-                email,
-                telefone,
-                senha: senhaAtualizada
-            },
-
-            select: {
-                id: true,
-                codigo: true,
-                nome: true,
-                email: true,
-                telefone: true,
-                ativo: true,
-                updated_at: true
+            if (!usuario) {
+                return res.status(404).json({
+                    erro: "Usuário não encontrado."
+                });
             }
 
-        });
+            let senhaAtualizada = usuario.senha;
 
-
-        return res.status(200).json({
-            mensagem: "Usuário atualizado com sucesso!",
-            usuario: usuarioAtualizado
-        });
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        return res.status(500).json({
-            erro: "Erro ao atualizar usuário."
-          });
-
-    }
-
-},
-// =========================
-// DESATIVAR USUÁRIO
-// =========================
-async delete(req, res) {
-
-    try {
-
-        const { id } = req.params;
-
-        // Verifica se o usuário existe
-        const usuario = await prisma.usuario.findUnique({
-            where: {
-                id
+            // Caso o usuário queira trocar a senha
+            if (senha) {
+                senhaAtualizada = await bcrypt.hash(senha, 10);
             }
-        });
 
-        if (!usuario) {
-            return res.status(404).json({
-                erro: "Usuário não encontrado."
+            const usuarioAtualizado = await prisma.usuario.update({
+
+                where: {
+                    id
+                },
+
+                data: {
+                    nome,
+                    email,
+                    telefone,
+                    senha: senhaAtualizada
+                },
+
+                select: {
+                    id: true,
+                    codigo: true,
+                    nome: true,
+                    email: true,
+                    telefone: true,
+                    ativo: true,
+                    updated_at: true
+                }
+
             });
+
+            return res.status(200).json({
+                mensagem: "Usuário atualizado com sucesso!",
+                usuario: usuarioAtualizado
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({
+                erro: "Erro ao atualizar usuário."
+            });
+
         }
 
-        // Desativa o usuário
-        const usuarioDesativado = await prisma.usuario.update({
-            where: {
-                id
-            },
-            data: {
-                ativo: false
-            },
-            select: {
-                id: true,
-                codigo: true,
-                nome: true,
-                email: true,
-                telefone: true,
-                ativo: true,
-                updated_at: true
+    },
+
+    // =========================
+    // DESATIVAR USUÁRIO
+    // =========================
+    async delete(req, res) {
+
+        try {
+
+            const { id } = req.params;
+
+            // Verifica se o usuário existe
+            const usuario = await prisma.usuario.findUnique({
+                where: {
+                    id
+                }
+            });
+
+            if (!usuario) {
+                return res.status(404).json({
+                    erro: "Usuário não encontrado."
+                });
             }
-        });
 
-        return res.status(200).json({
-            mensagem: "Usuário desativado com sucesso!",
-            usuario: usuarioDesativado
-        });
+            // Desativa o usuário
+            const usuarioDesativado = await prisma.usuario.update({
+                where: {
+                    id
+                },
+                data: {
+                    ativo: false
+                },
+                select: {
+                    id: true,
+                    codigo: true,
+                    nome: true,
+                    email: true,
+                    telefone: true,
+                    ativo: true,
+                    updated_at: true
+                }
+            });
 
-    } catch (error) {
+            return res.status(200).json({
+                mensagem: "Usuário desativado com sucesso!",
+                usuario: usuarioDesativado
+            });
 
-        console.error(error);
+        } catch (error) {
 
-        return res.status(500).json({
-            erro: "Erro ao desativar usuário."
-        });
+            console.error(error);
+
+            return res.status(500).json({
+                erro: "Erro ao desativar usuário."
+            });
+
+        }
 
     }
-
-}
 };
