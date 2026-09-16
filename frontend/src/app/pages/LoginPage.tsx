@@ -60,6 +60,14 @@ export function LoginPage() {
       toast.error("Informe seu e-mail.");
       return;
     }
+
+    // Validação estrita exigindo o '@' no campo de e-mail
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(contact) && !contact.includes("@")) {
+      toast.error("Por favor, insira um e-mail válido contendo '@'.");
+      return;
+    }
+
     if (!password.trim()) {
       toast.error("Informe sua senha.");
       return;
@@ -75,12 +83,10 @@ export function LoginPage() {
       });
 
       if (!result.ok) {
-        // Mensagem genérica por segurança
         toast.error("Não foi possível realizar o cadastro. As informações inseridas já possuem um vínculo no sistema.");
         return;
       }
 
-      // Notificação simulada no estilo aplicativo
       toast.success("Conta criada com sucesso!", {
         description: "Cadastro verificado e liberado no seu dispositivo. Faça login para continuar.",
         duration: 5000,

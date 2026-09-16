@@ -24,11 +24,11 @@ export async function fetchPackages() {
   return res.json();
 }
 
-export async function apiLogin(email: string, senha: string) {
+export async function apiLogin(ra: string, senha: string) {
   const res = await fetch(`${API_PREFIX}/usuarios/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, senha }),
+    body: JSON.stringify({ ra, senha }),
   });
 
   if (!res.ok) {
@@ -45,7 +45,13 @@ export async function apiLogin(email: string, senha: string) {
   return data;
 }
 
-export async function apiRegister(payload: { nome: string; email: string; senha: string; telefone?: string }) {
+export async function apiRegister(payload: { 
+  nome: string; 
+  ra: string; 
+  email: string; 
+  senha: string; 
+  telefone?: string 
+}) {
   const res = await fetch(`${API_PREFIX}/usuarios/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -60,27 +66,50 @@ export async function apiRegister(payload: { nome: string; email: string; senha:
   return res.json();
 }
 
-export async function createPackage(pkg: any) {
-  const headersCreate: Record<string, string> = { "Content-Type": "application/json", ...getAuthHeader() };
+export async function createPackage(pkg: {
+  codigo_rastreio: string;
+  descricao?: string;
+  destinatario_usuario_id: string;
+  funcionario_id: string;
+  status_atual_id: string;
+  observacoes?: string;
+}) {
+  const headersCreate: Record<string, string> = { 
+    "Content-Type": "application/json", 
+    ...getAuthHeader() 
+  };
+  
   const res = await fetch(`${API_PREFIX}/encomendas`, {
     method: "POST",
     headers: headersCreate,
     body: JSON.stringify(pkg),
   });
 
-  if (!res.ok) throw new Error("Failed to create package");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.erro || "Failed to create package");
+  }
+
   return res.json();
 }
 
 export async function updatePackageStatus(id: string, statusAtualId: string) {
-  const headersPatch: Record<string, string> = { "Content-Type": "application/json", ...getAuthHeader() };
+  const headersPatch: Record<string, string> = { 
+    "Content-Type": "application/json", 
+    ...getAuthHeader() 
+  };
+  
   const res = await fetch(`${API_PREFIX}/encomendas/${id}/status`, {
     method: "PATCH",
     headers: headersPatch,
     body: JSON.stringify({ status_atual_id: statusAtualId }),
   });
 
-  if (!res.ok) throw new Error("Failed to update status");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.erro || "Failed to update status");
+  }
+
   return res.json();
 }
 
@@ -91,7 +120,11 @@ export async function deletePackage(id: string) {
     headers: headersDel,
   });
 
-  if (!res.ok) throw new Error("Failed to delete");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.erro || "Failed to delete");
+  }
+
   return res.json();
 }
 
