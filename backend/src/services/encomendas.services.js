@@ -68,20 +68,22 @@ export const listarEncomendas = async (
   // ==========================================
   // FILTRO DE BUSCA
   // ==========================================
+  // OBS: "mode: insensitive" foi removido pois só existe no conector
+  // PostgreSQL do Prisma. No MySQL isso causava erro de validação.
+  // A collation padrão do MySQL (utf8mb4_general_ci/unicode_ci) já
+  // faz comparação case-insensitive por padrão.
 
   if (busca) {
     where.OR = [
       {
         codigo_rastreio: {
-          contains: busca,
-          mode: "insensitive"
+          contains: busca
         }
       },
       {
         destinatario: {
           nome: {
-            contains: busca,
-            mode: "insensitive"
+            contains: busca
           }
         }
       }

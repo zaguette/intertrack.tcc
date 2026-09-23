@@ -3,6 +3,11 @@
 import express from "express";
 import { userController } from "../controllers/userController.js";
 import { verificarToken } from "../middlewares/auth.js";
+import {
+    apenasFuncionario,
+    apenasCargos,
+    verificarDonoOuFuncionario
+} from "../middlewares/autorizacao.js";
 
 const router = express.Router();
 
@@ -33,16 +38,16 @@ router.get("/perfil", verificarToken, (req, res) => {
 // CRUD DE USUÁRIOS
 // =========================
 
-// Listar todos os usuários
-router.get("/", verificarToken, userController.findAll);
+// Listar todos os usuários — apenas funcionários
+router.get("/", verificarToken, apenasFuncionario, userController.findAll);
 
-// Buscar usuário por ID
-router.get("/:id", verificarToken, userController.findById);
+// Buscar usuário por ID — o próprio aluno ou qualquer funcionário
+router.get("/:id", verificarToken, verificarDonoOuFuncionario, userController.findById);
 
-// Atualizar usuário
-router.put("/:id", verificarToken, userController.update);
+// Atualizar usuário — o próprio aluno ou qualquer funcionário
+router.put("/:id", verificarToken, verificarDonoOuFuncionario, userController.update);
 
-// Desativar usuário
-router.delete("/:id", verificarToken, userController.delete);
+// Desativar usuário — apenas administrador
+router.delete("/:id", verificarToken, apenasCargos("administrador"), userController.delete);
 
 export default router;
