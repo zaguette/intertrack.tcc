@@ -17,7 +17,7 @@ import {
   deletePackage as apiDeletePackage
 } from "../lib/api";
 import { PackageItem, PackageStatus, User } from "../lib/types";
-
+import { toEncomendaPayload } from "../lib/adapters";
 interface AppContextType {
   user: User | null;
   packages: PackageItem[];
@@ -191,12 +191,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     contato?: string; 
   }) {
     try {
-      await apiRegister({ 
-        nome: payload.nome, 
-        email: payload.email, 
-        senha: payload.senha, 
-        telefone: payload.contato ?? payload.email 
-      });
+await apiRegister({ 
+  nome: payload.nome, 
+  ra: payload.ra,
+  email: payload.email, 
+  senha: payload.senha, 
+  telefone: payload.contato ?? payload.email 
+});
       return { ok: true };
     } catch (e: any) {
       if (e?.response?.data?.message) {
@@ -226,7 +227,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   async function addPackage(pkg: PackageItem) {
     try {
-      const apiResponse = await createPackage(pkg);
+    const apiResponse = await createPackage(toEncomendaPayload(pkg));
       setPackages((prev) => [normalizePackage(apiResponse), ...prev]);
     } catch (error) {
       console.error("Erro ao cadastrar encomenda na API:", error);

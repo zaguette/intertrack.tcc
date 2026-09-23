@@ -1,5 +1,58 @@
 # 📊 Relatório de Análise do Projeto
 
+## Resumo executivo e checklist
+
+### O que já está pronto
+
+- [x] Estrutura separada entre `backend` e `frontend`.
+- [x] Backend iniciado com Node.js, Express, CORS e `express.json()`.
+- [x] Prisma configurado com schema e migrations para MySQL/MariaDB.
+- [x] Cadastro e login de usuários com senha criptografada e JWT.
+- [x] Middleware de autenticação para rotas protegidas.
+- [x] Rotas de encomendas para cadastrar, listar, consultar, atualizar status e excluir.
+- [x] Histórico de status criado junto com o cadastro e a alteração de encomendas.
+- [x] Frontend React/Vite com TypeScript, layouts de aluno e funcionário e navegação por perfil.
+- [x] Telas de dashboard, consulta, histórico, perfil, cadastro, gerenciamento e gráficos.
+- [x] Cliente HTTP com `fetch` e proxy Vite preparado para `/api`.
+- [x] Persistência local de sessão, tema e encomendas como fallback de desenvolvimento.
+- [x] Arquivo de rotas documentado em `backend/ROTAS_INSOMNIA.md`.
+
+### O que está parcial ou falta concluir
+
+- [ ] Integrar todos os fluxos de encomendas ao banco sem depender de mock/localStorage.
+- [ ] Alinhar o modelo de dados do frontend com o schema Prisma, especialmente IDs, status e destinatário.
+- [ ] Corrigir o cadastro de nomes alternativos para usar `nome_completo` e `parentesco`.
+- [ ] Corrigir ou remover `backend/prisma/seed.js`, que referencia um model inexistente.
+- [ ] Corrigir ou remover os arquivos auxiliares com imports inexistentes: `backend/src/models/model.controller.js` e `backend/src/test.js`.
+- [ ] Adicionar a rota/tela de perfis ao fluxo do funcionário, caso essa funcionalidade faça parte do MVP.
+- [ ] Corrigir a configuração do Tailwind ou instalar a dependência `tailwindcss-animate` declarada no arquivo de configuração.
+- [ ] Criar testes automatizados de autenticação, autorização, encomendas e integração.
+- [ ] Padronizar validações e respostas de erro da API.
+- [ ] Completar o README raiz com instalação, configuração do banco, execução, arquitetura e variáveis de ambiente.
+- [ ] Confirmar e versionar um export real do Insomnia, se ele for exigido pela entrega.
+- [ ] Confirmar banco de produção, deploy, professor colaborador e divisão de tarefas fora do código.
+
+### Problemas mais importantes
+
+1. **Integração incompleta:** o frontend possui chamadas HTTP, mas também mantém fallback local; por isso uma operação pode parecer concluída na interface sem ter sido persistida no banco.
+2. **Contratos de dados desalinhados:** o backend trabalha com campos como `codigo_rastreio`, `destinatario_usuario_id` e `status_atual_id`, enquanto as telas usam o modelo simplificado de `PackageItem`.
+3. **Bug confirmado em nomes alternativos:** o service envia `nome` e `tipo`, mas o Prisma exige `nome_completo` e `parentesco`; esse endpoint tende a falhar.
+4. **Scripts e arquivos auxiliares quebrados:** `seed.js`, `model.controller.js` e `test.js` apontam para models, arquivos ou exports que não existem no estado atual.
+5. **Cobertura de testes insuficiente:** o backend declara apenas um script de teste que termina com erro e o frontend não possui script de teste.
+6. **Documentação incompleta:** o README raiz contém apenas o título e não explica como instalar ou executar o projeto.
+7. **Build do frontend quebrado:** `npm run build` falha porque o cadastro não envia `ra` para `apiRegister` e porque `PackageItem` não corresponde ao payload exigido por `createPackage`.
+
+### Ordem recomendada de correção
+
+- [ ] 1. Corrigir os contratos de payload e resposta entre frontend e backend.
+- [ ] 2. Fazer cadastro, atualização e exclusão de encomendas usarem a API de ponta a ponta.
+- [ ] 3. Corrigir o service de nomes alternativos e validar as rotas protegidas.
+- [ ] 4. Corrigir o seed e remover/ajustar arquivos auxiliares quebrados.
+- [ ] 5. Adicionar testes e padronizar erros/validações.
+- [ ] 6. Completar README, Insomnia e evidências de deploy.
+
+> **Conclusão:** o projeto já possui um MVP visual e uma base de API/banco funcional, mas ainda não deve ser considerado integrado de ponta a ponta. Os riscos principais estão na persistência real das operações, na incompatibilidade de contratos e nos scripts auxiliares quebrados.
+
 ## 1. 🏗️ Identificação e visão geral
 
 - **Nome do projeto:** Intertrack / UNASP Correio Interno
