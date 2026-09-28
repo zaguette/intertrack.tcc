@@ -3,7 +3,6 @@ import {
   Check,
   Package,
   PackageCheck,
-  PackagePlus,
   Pencil,
   Trash2,
   X,
@@ -16,14 +15,18 @@ import { StatCard } from "../../components/StatCard";
 import { StatusBadge } from "../../components/StatusBadge";
 import { useApp } from "../../context/AppContext";
 import { PackageStatus } from "../../lib/types";
+import { formatDateTime } from "../../lib/adapters";
 
 const statusOptions: { value: PackageStatus; label: string }[] = [
   { value: "disponivel", label: "Disponível" },
   { value: "entregue", label: "Entregue" },
 ];
 
+// Mesma regra do back-end (encomendaRoutes): só estes cargos excluem
+const CARGOS_QUE_EXCLUEM = ["administrador", "supervisor"];
+
 export function StaffDashboard() {
-  const { packages, updatePackage, deletePackage } = useApp();
+  const { user, packages, updatePackage, deletePackage } = useApp();
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState<PackageStatus>("disponivel");
@@ -31,16 +34,20 @@ export function StaffDashboard() {
   const [deliveryModalId, setDeliveryModalId] = useState<string | null>(null);
   const [collectorName, setCollectorName] = useState("");
   const [collectorRa, setCollectorRa] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const canDelete = CARGOS_QUE_EXCLUEM.includes((user?.cargo ?? "").toLowerCase());
 
   const total = packages.length;
   const disponivel = packages.filter((p) => p.status === "disponivel").length;
   const entregues = packages.filter((p) => p.status === "entregue").length;
   const naoRetiradas = packages.filter((p) => p.status !== "entregue").length;
 
-  const recent = [...packages]
-    .sort((a, b) => (b.dataChegada ?? "").localeCompare(a.dataChegada ?? ""))
-    .slice(0, 5);
-
+const recent = [...packages]
+  .sort((a, b) =>
+    (b.createdAt ?? b.dataChegada ?? "").localeCompare(a.createdAt ?? a.dataChegada ?? "")
+  )
+  .slice(0, 5);
   const pendingDeletePkg = packages.find((pkg) => pkg.id === confirmDeleteId);
   const deliveryPkg = packages.find((pkg) => pkg.id === deliveryModalId);
 
@@ -59,36 +66,45 @@ export function StaffDashboard() {
     setEditingId(null);
   }
 
-  function handleEditSave(id: string) {
+  async function handleEditSave(id: string) {
+    if (busy) return;
+
     if (editingStatus === "entregue") {
       setDeliveryModalId(id);
       return;
     }
 
-    updatePackage(id, {
-      status: editingStatus,
-      dataRetirada: undefined,
-      collectedAt: undefined,
-      collectedBy: undefined,
-      collectedByRa: undefined,
-    });
-    setEditingId(null);
-    if (editingStatus === "disponivel") {
-      toast.success("Status atualizado para Disponível! O aluno foi notificado.");
-      return;
+    setBusy(true);
+    const result = await updatePackage(id, { status: editingStatus });
+    setBusy(false);
+
+    if (!result.ok) {
+      toast.error(result.error ?? "Não foi possível atualizar o status.");
+      return; // mantém a edição aberta
     }
+
+    setEditingId(null);
     toast.success("Status atualizado com sucesso.");
   }
 
-  function handleDeleteConfirm() {
-    if (!confirmDeleteId) return;
-    deletePackage(confirmDeleteId);
+  async function handleDeleteConfirm() {
+    if (!confirmDeleteId || busy) return;
+
+    setBusy(true);
+    const result = await deletePackage(confirmDeleteId);
+    setBusy(false);
+
+    if (!result.ok) {
+      toast.error(result.error ?? "Não foi possível excluir a encomenda.");
+      return;
+    }
+
     setConfirmDeleteId(null);
     toast.success("Encomenda removida com sucesso.");
   }
 
-  function handleDeliveryConfirm() {
-    if (!deliveryPkg) return;
+  async function handleDeliveryConfirm() {
+    if (!deliveryPkg || busy) return;
     if (!collectorName.trim()) {
       toast.error("Informe o nome de quem retirou.");
       return;
@@ -98,15 +114,18 @@ export function StaffDashboard() {
       return;
     }
 
-    const nowIso = new Date().toISOString();
-
-    updatePackage(deliveryPkg.id, {
+    setBusy(true);
+    const result = await updatePackage(deliveryPkg.id, {
       status: "entregue",
-      dataRetirada: nowIso.split("T")[0],
-      collectedAt: nowIso,
       collectedBy: collectorName.trim(),
       collectedByRa: collectorRa.trim(),
     });
+    setBusy(false);
+
+    if (!result.ok) {
+      toast.error(result.error ?? "Não foi possível registrar a retirada.");
+      return; // mantém o modal aberto com os dados preenchidos
+    }
 
     toast.success(`Retirado por: ${collectorName.trim()} (RA: ${collectorRa.trim()}).`);
     setCollectorName("");
@@ -133,9 +152,10 @@ export function StaffDashboard() {
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                disabled={busy}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
               >
-                Excluir
+                {busy ? "Excluindo..." : "Excluir"}
               </button>
             </div>
           </div>
@@ -178,9 +198,10 @@ export function StaffDashboard() {
               </button>
               <button
                 onClick={handleDeliveryConfirm}
-                className="rounded-lg bg-[var(--unasp-orange)] px-4 py-2 text-sm font-medium text-white transition hover:brightness-110"
+                disabled={busy}
+                className="rounded-lg bg-[var(--unasp-orange)] px-4 py-2 text-sm font-medium text-white transition hover:brightness-110 disabled:opacity-60"
               >
-                Confirmar entrega
+                {busy ? "Salvando..." : "Confirmar entrega"}
               </button>
             </div>
           </div>
@@ -256,7 +277,7 @@ export function StaffDashboard() {
                     <td className="whitespace-nowrap px-6 py-4 text-gray-500">
                       <span className="flex items-center gap-1.5">
                         <Calendar size={13} />
-                        {formatDate(pkg.dataChegada)}
+                     {pkg.createdAt ? formatDateTime(pkg.createdAt) : formatDate(pkg.dataChegada)}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -275,7 +296,8 @@ export function StaffDashboard() {
                           </select>
                           <button
                             onClick={() => handleEditSave(pkg.id)}
-                            className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-700 hover:bg-green-200"
+                            disabled={busy}
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-60"
                             title="Salvar"
                           >
                             <Check size={14} />
@@ -303,13 +325,15 @@ export function StaffDashboard() {
                             <Pencil size={15} />
                           </button>
                         )}
-                        <button
-                          onClick={() => setConfirmDeleteId(pkg.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
-                          title="Excluir"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => setConfirmDeleteId(pkg.id)}
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+                            title="Excluir"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

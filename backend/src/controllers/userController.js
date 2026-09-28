@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const getSecret = () => process.env.JWT_SECRET;
 
 export const userController = {
 
@@ -72,17 +72,17 @@ export const userController = {
     // =========================
     async login(req, res) {
         try {
-            const { email, senha } = req.body;
+         const { email, senha } = req.body; // "email" pode conter o RA ou o e-mail
 
-            // ==========================================
-            // TENTA LOGIN COMO USUÁRIO/ALUNO
-            // ==========================================
-            const usuario = await prisma.usuario.findUnique({
-                where: {
-                    email
-                }
-            });
+if (!email || !senha) {
+    return res.status(400).json({ erro: "Informe o RA/e-mail e a senha." });
+}
 
+const usuario = await prisma.usuario.findFirst({
+    where: {
+        OR: [{ email }, { ra: email }]
+    }
+});
             if (usuario) {
                 if (!usuario.ativo) {
                     return res.status(403).json({
@@ -101,18 +101,17 @@ export const userController = {
                     });
                 }
 
-                const token = jwt.sign(
-                    {
-                        id: usuario.id,
-                        email: usuario.email,
-                        tipo: "aluno"
-                    },
-                    JWT_SECRET,
-                    {
-                        expiresIn: "8h"
-                    }
-                );
-
+               const token = jwt.sign(
+    {
+        id: usuario.id,
+        email: usuario.email,
+        tipo: "aluno"
+    },
+    getSecret(),        // <-- era JWT_SECRET
+    {
+        expiresIn: "8h"
+    }
+);
                 return res.json({
                     auth: true,
                     token,
@@ -159,7 +158,7 @@ export const userController = {
                         tipo: "funcionario",
                         cargo: funcionario.cargo
                     },
-                    JWT_SECRET,
+                    getSecret(),
                     {
                         expiresIn: "8h"
                     }
@@ -204,6 +203,7 @@ export const userController = {
                 select: {
                     id: true,
                     codigo: true,
+                    ra: true, 
                     nome: true,
                     email: true,
                     telefone: true,

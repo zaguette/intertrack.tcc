@@ -1,39 +1,36 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { authenticateUser, mockPackages, registerUser } from "../data/mockData";
-import {
-  clearSession,
-  getStoredPackages,
-  getStoredSession,
-  PACKAGES_KEY,
-  savePackages,
-  saveSession
-} from "../lib/storage";
+import { clearSession, getStoredSession, saveSession } from "../lib/storage";
 import {
   fetchPackages as fetchPackagesFromApi,
+  fetchUsers,
   apiLogin,
   apiRegister,
   createPackage,
   updatePackageStatus,
-  deletePackage as apiDeletePackage
+  deletePackage as apiDeletePackage,
+  setApiToken
 } from "../lib/api";
-import { PackageItem, PackageStatus, User } from "../lib/types";
-import { toEncomendaPayload } from "../lib/adapters";
+import { PackageItem, User } from "../lib/types";
+import { fromEncomendaApi, toEncomendaPayload, toStatusId } from "../lib/adapters";
+
+type ActionResult = { ok: boolean; error?: string };
+
 interface AppContextType {
   user: User | null;
   packages: PackageItem[];
   theme: "light" | "dark";
-  login: (ra: string, password: string) => Promise<User | null>;
+  login: (identificador: string, password: string) => Promise<User | null>;
   register: (payload: {
     nome: string;
     ra: string;
     email: string;
     senha: string;
     contato?: string;
-  }) => Promise<{ ok: boolean; error?: string }>;
+  }) => Promise<ActionResult>;
   logout: () => void;
-  addPackage: (pkg: PackageItem) => Promise<void>;
-  updatePackage: (id: string, updates: Partial<PackageItem>) => Promise<void>;
-  deletePackage: (id: string) => Promise<void>;
+  addPackage: (pkg: PackageItem) => Promise<ActionResult>;
+  updatePackage: (id: string, updates: Partial<PackageItem>) => Promise<ActionResult>;
+  deletePackage: (id: string) => Promise<ActionResult>;
   toggleTheme: () => void;
 }
 
@@ -66,20 +63,8 @@ function applyTheme(theme: "light" | "dark") {
   root.style.colorScheme = theme;
 }
 
-function normalizeStatus(status?: string): PackageStatus {
-  if (!status) return "pending";
-  const s = status.toString().toLowerCase();
-  if (s === "entregue" || s === "collected") return "collected";
-  if (s === "disponivel" || s === "available") return "available";
-  if (s === "pending") return "pending";
-  return "pending";
-}
-
-function normalizePackage(pkg: Partial<PackageItem>): PackageItem {
-  return {
-    ...(pkg as PackageItem),
-    status: normalizeStatus((pkg as PackageItem).status)
-  } as PackageItem;
+function errorMessage(e: unknown, fallback: string) {
+  return e instanceof Error && e.message ? e.message : fallback;
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -87,6 +72,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
+  // Sempre relê a lista do banco: a tela mostra exatamente o que está no MySQL
+  async function reloadPackages() {
+    const list = await fetchPackagesFromApi();
+    setPackages(list.map(fromEncomendaApi));
+  }
+
+  // Restaura sessão e tema
   useEffect(() => {
     const storedSession = getStoredSession();
     setUser(storedSession);
@@ -95,31 +87,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTheme(nextTheme);
     applyTheme(nextTheme);
     persistTheme(nextTheme, storedSession);
+  }, []);
 
-    async function loadPackages() {
-      const storedPackages = getStoredPackages().map(normalizePackage);
-
-      try {
-        const apiResp = await fetchPackagesFromApi();
-        if (Array.isArray(apiResp) && apiResp.length > 0) {
-          setPackages(apiResp.map(normalizePackage));
-          return;
-        }
-      } catch (e) {
-        // Fallback local caso a API não responda
-      }
-
-      if (storedPackages.length === 0) {
-        const normalizedMocks = mockPackages.map(normalizePackage);
-        setPackages(normalizedMocks);
-        savePackages(normalizedMocks);
-      } else {
-        setPackages(storedPackages);
-      }
+  // Carrega encomendas da API. Lista vazia é resposta válida (sem mock).
+  useEffect(() => {
+    if (!user) {
+      setPackages([]);
+      return;
     }
 
-    loadPackages();
-  }, []);
+    reloadPackages().catch((e) => {
+      console.error("Erro ao carregar encomendas:", e);
+      setPackages([]);
+    });
+  }, [user?.id]);
 
   useEffect(() => {
     applyTheme(theme);
@@ -132,33 +113,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     persistTheme(nextTheme, user);
   }, [user]);
 
-  useEffect(() => {
-    if (packages.length > 0) {
-      savePackages(packages);
-    }
-  }, [packages]);
-
-  useEffect(() => {
-    function handleStorage(event: StorageEvent) {
-      if (event.key !== PACKAGES_KEY) return;
-      setPackages(getStoredPackages().map(normalizePackage));
-    }
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  async function login(ra: string, _password: string): Promise<User | null> {
+  async function login(identificador: string, password: string): Promise<User | null> {
     try {
-      const resp = await apiLogin(ra, _password);
+      const resp = await apiLogin(identificador, password);
       const serverUser = resp.user;
 
       const mapped: User = {
         id: serverUser.id,
         nome: serverUser.nome,
-        ra: (serverUser.ra as string) ?? serverUser.email ?? "",
-        tipo: "aluno"
-      };
+        ra: serverUser.ra ?? serverUser.email ?? "",
+        tipo: serverUser.tipo, // "aluno" | "funcionario" vindo da API
+        cargo: serverUser.cargo
+      } as User;
 
       const nextTheme = getStoredTheme(mapped);
       setTheme(nextTheme);
@@ -169,17 +135,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveSession(mapped);
       return mapped;
     } catch (e) {
-      const found = authenticateUser(ra, _password);
-      if (!found) return null;
-
-      const nextTheme = getStoredTheme(found);
-      setTheme(nextTheme);
-      applyTheme(nextTheme);
-      persistTheme(nextTheme, found);
-
-      setUser(found);
-      saveSession(found);
-      return found;
+      console.error("Erro no login:", e);
+      return null;
     }
   }
 
@@ -189,73 +146,81 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     email: string;
     senha: string;
     contato?: string;
-  }) {
+  }): Promise<ActionResult> {
     try {
       await apiRegister({
         nome: payload.nome,
         ra: payload.ra,
         email: payload.email,
         senha: payload.senha,
-        telefone: payload.contato ?? payload.email
+        telefone: payload.contato
       });
       return { ok: true };
-    } catch (e: any) {
-      if (e?.response?.data?.message) {
-        return { ok: false, error: e.response.data.message };
-      }
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao cadastrar usuário.") };
     }
-
-    const result = registerUser({
-      nome: payload.nome,
-      ra: payload.ra,
-      email: payload.email,
-      contato: payload.email,
-      senha: payload.senha
-    } as any);
-
-    if (!result.ok) {
-      return { ok: false, error: result.error };
-    }
-    return { ok: true };
   }
 
   function logout() {
     persistTheme(theme, null);
     clearSession();
+    setApiToken(null);
+    setPackages([]);
     setUser(null);
   }
 
-  async function addPackage(pkg: PackageItem) {
+  async function addPackage(pkg: PackageItem): Promise<ActionResult> {
     try {
-      const apiResponse = await createPackage(toEncomendaPayload(pkg));
-      setPackages((prev) => [normalizePackage(apiResponse), ...prev]);
-    } catch (error) {
-      console.error("Erro ao cadastrar encomenda na API:", error);
-      setPackages((prev) => [normalizePackage(pkg), ...prev]);
-    }
-  }
+      // A API não recebe RA: descobrimos o ID do aluno pela lista de usuários
+      const users = await fetchUsers();
 
-  async function updatePackage(id: string, updates: Partial<PackageItem>) {
-    try {
-      if (updates.status) {
-        await updatePackageStatus(id, updates.status);
+      if (users.length > 0 && users.every((u) => u.ra === undefined)) {
+        return {
+          ok: false,
+          error: "A API de usuários não retorna o RA (adicione ra: true no select de findAll)."
+        };
       }
-      setPackages((prev) =>
-        prev.map((p) =>
-          p.id === id ? normalizePackage({ ...p, ...updates }) : p
-        )
-      );
-    } catch (error) {
-      console.error("Erro ao atualizar status na API:", error);
+
+      const alvo = users.find((u) => (u.ra ?? "").trim() === (pkg.ra ?? "").trim());
+      if (!alvo) {
+        return { ok: false, error: `Nenhum aluno encontrado com o RA ${pkg.ra}.` };
+      }
+      if (alvo.ativo === false) {
+        return { ok: false, error: "Este aluno está desativado." };
+      }
+
+      await createPackage(toEncomendaPayload(pkg, alvo.id));
+      await reloadPackages();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao cadastrar encomenda.") };
     }
   }
 
-  async function deletePackage(id: string) {
+  async function updatePackage(
+    id: string,
+    updates: Partial<PackageItem>
+  ): Promise<ActionResult> {
+    try {
+      if (!updates.status) {
+        return { ok: false, error: "Nenhuma alteração de status informada." };
+      }
+      // Hoje a API só persiste o status (não guarda quem retirou)
+      await updatePackageStatus(id, toStatusId(updates.status));
+      await reloadPackages();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao atualizar encomenda.") };
+    }
+  }
+
+  async function deletePackage(id: string): Promise<ActionResult> {
     try {
       await apiDeletePackage(id);
-      setPackages((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
-      console.error("Erro ao deletar encomenda na API:", error);
+      await reloadPackages();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao excluir encomenda.") };
     }
   }
 

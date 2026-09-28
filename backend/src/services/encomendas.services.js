@@ -100,6 +100,7 @@ export const listarEncomendas = async (
         select: {
           id: true,
           nome: true,
+          ra: true, 
           email: true
         }
       },

@@ -1,13 +1,13 @@
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, Clock, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { StaffLayout } from "../../components/StaffLayout";
-import { BrazilianDatePicker } from "../../components/ui/BrazilianDatePicker";
 import { useApp } from "../../context/AppContext";
+import { formatDateTime } from "../../lib/adapters";
 import { PackageItem, PackageStatus } from "../../lib/types";
 
-const DRAFT_KEY = "intertrack_staff_cadastrar_draft_v1";
+const DRAFT_KEY = "intertrack_staff_cadastrar_draft_v2";
 
 const statusOptions: { value: PackageStatus; label: string }[] = [
   { value: "disponivel", label: "Disponível" },
@@ -15,25 +15,27 @@ const statusOptions: { value: PackageStatus; label: string }[] = [
 ];
 
 type StaffDraft = {
-  aluno: string;
   ra: string;
   codigo: string;
-  dataChegada: string;
   status: PackageStatus;
 };
 
 export function StaffCadastrar() {
   const { addPackage } = useApp();
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
-  const today = new Date().toISOString().split("T")[0];
+  // Relógio só para exibição (o horário gravado vem do servidor)
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 15000);
+    return () => clearInterval(timer);
+  }, []);
 
   function getDefaultForm(): StaffDraft {
     return {
-      aluno: "",
       ra: "",
       codigo: "",
-      dataChegada: today,
       status: "disponivel" as PackageStatus,
     };
   }
@@ -44,19 +46,10 @@ export function StaffCadastrar() {
     if (!raw) return fallback;
 
     try {
-      const parsed = JSON.parse(raw) as {
-        aluno?: string;
-        ra?: string;
-        codigo?: string;
-        dataChegada?: string;
-        status?: PackageStatus;
-      };
-
+      const parsed = JSON.parse(raw) as Partial<StaffDraft>;
       return {
-        aluno: parsed.aluno ?? "",
         ra: parsed.ra ?? "",
         codigo: parsed.codigo ?? "",
-        dataChegada: parsed.dataChegada || today,
         status: parsed.status === "entregue" ? "entregue" : "disponivel",
       };
     } catch {
@@ -66,6 +59,7 @@ export function StaffCadastrar() {
 
   const [form, setForm] = useState<StaffDraft>(getInitialForm);
 
+  // Rascunho do formulário (só conveniência, não guarda encomendas)
   useEffect(() => {
     localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
   }, [form]);
@@ -74,27 +68,30 @@ export function StaffCadastrar() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit() {
-    if (!form.aluno.trim()) return toast.error("Informe o nome do aluno.");
+  async function handleSubmit() {
+    if (submitting) return;
     if (!form.ra.trim()) return toast.error("Informe o RA do aluno.");
     if (!form.codigo.trim()) return toast.error("Informe o código da encomenda.");
-    if (!form.dataChegada) return toast.error("Informe a data de chegada.");
 
     const newPkg: PackageItem = {
-      id: crypto.randomUUID(),
-      aluno: form.aluno.trim(),
+      id: "",
       ra: form.ra.trim(),
       codigo: form.codigo.trim(),
-      dataChegada: form.dataChegada,
       status: form.status,
     };
 
-    addPackage(newPkg);
-    toast.success("Encomenda cadastrada com sucesso!");
+    setSubmitting(true);
+    const result = await addPackage(newPkg);
+    setSubmitting(false);
 
-    // Reset form
-    const resetForm = getDefaultForm();
-    setForm(resetForm);
+    if (!result.ok) {
+      // Mantém o formulário preenchido para o funcionário corrigir
+      toast.error(result.error ?? "Não foi possível cadastrar a encomenda.");
+      return;
+    }
+
+    toast.success("Encomenda cadastrada com sucesso!");
+    setForm(getDefaultForm());
     localStorage.removeItem(DRAFT_KEY);
   }
 
@@ -116,20 +113,6 @@ export function StaffCadastrar() {
 
       <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm">
         <div className="grid gap-5 sm:grid-cols-2">
-          {/* Nome do Aluno */}
-          <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Nome do Aluno <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: João Silva"
-              value={form.aluno}
-              onChange={(e) => handleChange("aluno", e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-            />
-          </div>
-
           {/* RA */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -158,15 +141,18 @@ export function StaffCadastrar() {
             />
           </div>
 
-          {/* Data de Chegada */}
+          {/* Data e hora de chegada (automática) */}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Data de Chegada <span className="text-red-500">*</span>
+              Data e hora de chegada
             </label>
-            <BrazilianDatePicker
-              value={form.dataChegada}
-              onChange={(value) => handleChange("dataChegada", value)}
-            />
+            <div className="flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700">
+              <Clock size={15} className="text-gray-400" />
+              <span>{formatDateTime(now.toISOString())}</span>
+            </div>
+            <p className="mt-1 text-xs text-gray-400">
+              Registrada automaticamente no momento do cadastro.
+            </p>
           </div>
 
           {/* Status */}
@@ -192,9 +178,10 @@ export function StaffCadastrar() {
         <div className="mt-6">
           <button
             onClick={handleSubmit}
-            className="w-full rounded-lg bg-[var(--unasp-orange)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            disabled={submitting}
+            className="w-full rounded-lg bg-[var(--unasp-orange)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Cadastrar Encomenda
+            {submitting ? "Cadastrando..." : "Cadastrar Encomenda"}
           </button>
         </div>
       </div>
@@ -204,8 +191,7 @@ export function StaffCadastrar() {
         <Info size={16} className="mt-0.5 flex-shrink-0 text-[var(--accent-text)]" />
         <p className="text-sm text-[var(--muted-text)]">
           Após o cadastro, o aluno poderá visualizar sua encomenda no sistema.
-          Quando o status for alterado para <strong>Disponível</strong>, o aluno
-          será notificado para retirar.
+          O aluno é localizado pelo RA informado.
         </p>
       </div>
     </StaffLayout>

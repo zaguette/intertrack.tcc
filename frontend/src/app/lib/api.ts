@@ -12,124 +12,102 @@ export async function setApiToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-export async function fetchPackages() {
-  const headers: Record<string, string> = { "Content-Type": "application/json", ...getAuthHeader() };
-  const res = await fetch(`${API_PREFIX}/encomendas`, { headers });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`API error: ${res.status} ${text}`);
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_PREFIX}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeader(),
+        ...((options.headers as Record<string, string>) ?? {}),
+      },
+    });
+  } catch {
+    throw new Error("Não foi possível conectar ao servidor.");
   }
 
-  return res.json();
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(data?.erro || `Erro ${res.status} ao acessar o servidor.`);
+  }
+
+  return data as T;
 }
 
-export async function apiLogin(ra: string, senha: string) {
-  const res = await fetch(`${API_PREFIX}/usuarios/login`, {
+export type ApiLoginResponse = {
+  auth: boolean;
+  token: string;
+  user: {
+    id: string;
+    nome: string;
+    email?: string;
+    ra?: string;
+    tipo: "aluno" | "funcionario";
+    cargo?: string;
+  };
+};
+
+// O back-end atual só aceita { email, senha } no login.
+export async function apiLogin(email: string, senha: string) {
+  const data = await request<ApiLoginResponse>("/usuarios/login", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ra, senha }),
+    body: JSON.stringify({ email: email.trim(), senha }),
   });
 
-  if (!res.ok) {
-    const payload = await res.json().catch(() => ({}));
-    throw new Error(payload.erro || "Login failed");
-  }
-
-  const data = await res.json();
-
-  if (data.token) {
-    await setApiToken(data.token);
-  }
-
+  if (data.token) await setApiToken(data.token);
   return data;
 }
 
-export async function apiRegister(payload: { 
-  nome: string; 
-  ra: string; 
-  email: string; 
-  senha: string; 
-  telefone?: string 
+export async function apiRegister(payload: {
+  nome: string;
+  ra: string;
+  email: string;
+  senha: string;
+  telefone?: string;
 }) {
-  const res = await fetch(`${API_PREFIX}/usuarios/register`, {
+  return request<{ mensagem: string }>("/usuarios/register", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const json = await res.json().catch(() => ({}));
-    throw new Error(json.erro || "Register failed");
-  }
-
-  return res.json();
 }
 
-export async function createPackage(pkg: {
+export type ApiUser = { id: string; ra?: string; nome: string; email: string; ativo?: boolean };
+
+export async function fetchUsers() {
+  return request<ApiUser[]>("/usuarios");
+}
+
+export async function fetchPackages() {
+  return request<any[]>("/encomendas");
+}
+
+export async function createPackage(payload: {
   codigo_rastreio: string;
-  descricao?: string;
   destinatario_usuario_id: string;
-  funcionario_id: string;
   status_atual_id: string;
-  observacoes?: string;
 }) {
-  const headersCreate: Record<string, string> = { 
-    "Content-Type": "application/json", 
-    ...getAuthHeader() 
-  };
-  
-  const res = await fetch(`${API_PREFIX}/encomendas`, {
+  return request<any>("/encomendas", {
     method: "POST",
-    headers: headersCreate,
-    body: JSON.stringify(pkg),
+    body: JSON.stringify(payload),
   });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.erro || "Failed to create package");
-  }
-
-  return res.json();
 }
 
 export async function updatePackageStatus(id: string, statusAtualId: string) {
-  const headersPatch: Record<string, string> = { 
-    "Content-Type": "application/json", 
-    ...getAuthHeader() 
-  };
-  
-  const res = await fetch(`${API_PREFIX}/encomendas/${id}/status`, {
+  return request<any>(`/encomendas/${id}/status`, {
     method: "PATCH",
-    headers: headersPatch,
     body: JSON.stringify({ status_atual_id: statusAtualId }),
   });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.erro || "Failed to update status");
-  }
-
-  return res.json();
 }
 
 export async function deletePackage(id: string) {
-  const headersDel: Record<string, string> = { ...getAuthHeader() };
-  const res = await fetch(`${API_PREFIX}/encomendas/${id}`, {
-    method: "DELETE",
-    headers: headersDel,
-  });
-
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.erro || "Failed to delete");
-  }
-
-  return res.json();
+  return request<{ mensagem: string }>(`/encomendas/${id}`, { method: "DELETE" });
 }
 
 export default {
   fetchPackages,
+  fetchUsers,
   apiLogin,
   apiRegister,
   createPackage,

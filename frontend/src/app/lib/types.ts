@@ -7,6 +7,7 @@ export type User = {
   nome?: string;
   ra?: string;
   tipo?: UserTipo;
+  cargo?: string; // "administrador" | "supervisor" | "recebimento" | "porteiro" (vem da API)
   // optional fields used by auth/register components
   username?: string;
   password?: string;
