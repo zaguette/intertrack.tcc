@@ -6,11 +6,11 @@ import {
   getStoredSession,
   PACKAGES_KEY,
   savePackages,
-  saveSession,
+  saveSession
 } from "../lib/storage";
-import { 
-  fetchPackages as fetchPackagesFromApi, 
-  apiLogin, 
+import {
+  fetchPackages as fetchPackagesFromApi,
+  apiLogin,
   apiRegister,
   createPackage,
   updatePackageStatus,
@@ -23,12 +23,12 @@ interface AppContextType {
   packages: PackageItem[];
   theme: "light" | "dark";
   login: (ra: string, password: string) => Promise<User | null>;
-  register: (payload: { 
-    nome: string; 
-    ra: string; 
-    email: string; 
-    senha: string; 
-    contato?: string; 
+  register: (payload: {
+    nome: string;
+    ra: string;
+    email: string;
+    senha: string;
+    contato?: string;
   }) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   addPackage: (pkg: PackageItem) => Promise<void>;
@@ -78,7 +78,7 @@ function normalizeStatus(status?: string): PackageStatus {
 function normalizePackage(pkg: Partial<PackageItem>): PackageItem {
   return {
     ...(pkg as PackageItem),
-    status: normalizeStatus((pkg as PackageItem).status),
+    status: normalizeStatus((pkg as PackageItem).status)
   } as PackageItem;
 }
 
@@ -157,7 +157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         id: serverUser.id,
         nome: serverUser.nome,
         ra: (serverUser.ra as string) ?? serverUser.email ?? "",
-        tipo: "aluno",
+        tipo: "aluno"
       };
 
       const nextTheme = getStoredTheme(mapped);
@@ -183,21 +183,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function register(payload: { 
-    nome: string; 
-    ra: string; 
-    email: string; 
-    senha: string; 
-    contato?: string; 
+  async function register(payload: {
+    nome: string;
+    ra: string;
+    email: string;
+    senha: string;
+    contato?: string;
   }) {
     try {
-await apiRegister({ 
-  nome: payload.nome, 
-  ra: payload.ra,
-  email: payload.email, 
-  senha: payload.senha, 
-  telefone: payload.contato ?? payload.email 
-});
+      await apiRegister({
+        nome: payload.nome,
+        ra: payload.ra,
+        email: payload.email,
+        senha: payload.senha,
+        telefone: payload.contato ?? payload.email
+      });
       return { ok: true };
     } catch (e: any) {
       if (e?.response?.data?.message) {
@@ -210,7 +210,7 @@ await apiRegister({
       ra: payload.ra,
       email: payload.email,
       contato: payload.email,
-      senha: payload.senha,
+      senha: payload.senha
     } as any);
 
     if (!result.ok) {
@@ -227,7 +227,7 @@ await apiRegister({
 
   async function addPackage(pkg: PackageItem) {
     try {
-    const apiResponse = await createPackage(toEncomendaPayload(pkg));
+      const apiResponse = await createPackage(toEncomendaPayload(pkg));
       setPackages((prev) => [normalizePackage(apiResponse), ...prev]);
     } catch (error) {
       console.error("Erro ao cadastrar encomenda na API:", error);
@@ -241,7 +241,9 @@ await apiRegister({
         await updatePackageStatus(id, updates.status);
       }
       setPackages((prev) =>
-        prev.map((p) => (p.id === id ? normalizePackage({ ...p, ...updates }) : p))
+        prev.map((p) =>
+          p.id === id ? normalizePackage({ ...p, ...updates }) : p
+        )
       );
     } catch (error) {
       console.error("Erro ao atualizar status na API:", error);
@@ -277,7 +279,7 @@ await apiRegister({
         addPackage,
         updatePackage,
         deletePackage,
-        toggleTheme,
+        toggleTheme
       }}
     >
       {children}

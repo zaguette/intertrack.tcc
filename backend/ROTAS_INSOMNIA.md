@@ -31,11 +31,11 @@ Content-Type: application/json
 
 ## Resumo
 
-| Acesso | Quantidade |
-|---|---:|
-| Públicas | 3 |
-| Privadas por JWT | 13 |
-| Total | 16 |
+| Acesso           | Quantidade |
+| ---------------- | ---------: |
+| Públicas         |          3 |
+| Privadas por JWT |         13 |
+| Total            |         16 |
 
 Uma rota marcada como privada exige apenas um JWT válido. Atualmente o backend não restringe essas rotas por perfil (`aluno` ou `funcionario`) nem por cargo do funcionário.
 
@@ -362,21 +362,21 @@ Token inválido ou expirado:
 
 ## Índice completo dos endpoints
 
-| Método | Endpoint | Acesso |
-|---|---|---|
-| `GET` | `/` | Público |
-| `POST` | `/usuarios/register` | Público |
-| `POST` | `/usuarios/login` | Público |
-| `GET` | `/usuarios/perfil` | JWT |
-| `GET` | `/usuarios` | JWT |
-| `GET` | `/usuarios/:id` | JWT |
-| `PUT` | `/usuarios/:id` | JWT |
-| `DELETE` | `/usuarios/:id` | JWT |
-| `POST` | `/encomendas` | JWT |
-| `GET` | `/encomendas` | JWT |
-| `GET` | `/encomendas/:id` | JWT |
-| `PATCH` | `/encomendas/:id/status` | JWT |
-| `DELETE` | `/encomendas/:id` | JWT |
-| `POST` | `/nomes-entrega` | JWT |
-| `GET` | `/nomes-entrega` | JWT |
-| `DELETE` | `/nomes-entrega/:id` | JWT |
+| Método   | Endpoint                 | Acesso  |
+| -------- | ------------------------ | ------- |
+| `GET`    | `/`                      | Público |
+| `POST`   | `/usuarios/register`     | Público |
+| `POST`   | `/usuarios/login`        | Público |
+| `GET`    | `/usuarios/perfil`       | JWT     |
+| `GET`    | `/usuarios`              | JWT     |
+| `GET`    | `/usuarios/:id`          | JWT     |
+| `PUT`    | `/usuarios/:id`          | JWT     |
+| `DELETE` | `/usuarios/:id`          | JWT     |
+| `POST`   | `/encomendas`            | JWT     |
+| `GET`    | `/encomendas`            | JWT     |
+| `GET`    | `/encomendas/:id`        | JWT     |
+| `PATCH`  | `/encomendas/:id/status` | JWT     |
+| `DELETE` | `/encomendas/:id`        | JWT     |
+| `POST`   | `/nomes-entrega`         | JWT     |
+| `GET`    | `/nomes-entrega`         | JWT     |
+| `DELETE` | `/nomes-entrega/:id`     | JWT     |
