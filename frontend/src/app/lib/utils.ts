@@ -13,3 +13,5 @@ export function formatDateTime(value?: string) {
 export function generateId() {
   return crypto.randomUUID();
 }
+
+export const RA_PATTERN = /^\d{6}$/;

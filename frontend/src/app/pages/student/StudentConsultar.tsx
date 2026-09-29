@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { StatusBadge } from "../../components/StatusBadge";
 import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
+import { formatDateTime } from "../../lib/adapters";
 import { PackageStatus } from "../../lib/types";
 
 const statusOptions: { value: PackageStatus | "todos"; label: string }[] = [
@@ -13,32 +14,24 @@ const statusOptions: { value: PackageStatus | "todos"; label: string }[] = [
 ];
 
 export function StudentConsultar() {
-  const { user, packages } = useApp();
+  const { packages } = useApp();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<PackageStatus | "todos">("todos");
 
-  const myPackages = packages.filter((p) => p.ra === user?.ra);
-
+  // A API já retorna somente as encomendas do aluno logado
   const filtered = useMemo(() => {
-    return myPackages.filter((p) => {
+    return packages.filter((p) => {
       const matchSearch =
         !search.trim() ||
-        (p.codigo ?? "").toLowerCase().includes(search.toLowerCase()) ||
-        (p.aluno ?? "").toLowerCase().includes(search.toLowerCase());
+        (p.codigo ?? "").toLowerCase().includes(search.toLowerCase());
 
       const matchStatus = statusFilter === "todos" || p.status === statusFilter;
 
       return matchSearch && matchStatus;
     });
-  }, [myPackages, search, statusFilter]);
-
-  function formatDate(date?: string) {
-    if (!date) return "—";
-    const [year, month, day] = date.split("-");
-    return `${day}/${month}/${year}`;
-  }
+  }, [packages, search, statusFilter]);
 
   return (
     <StudentLayout>
@@ -62,7 +55,7 @@ export function StudentConsultar() {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar por código ou nome…"
+                placeholder="Buscar por código…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
@@ -118,7 +111,7 @@ export function StudentConsultar() {
                 </div>
                 <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
                   <Calendar size={12} />
-                  <span>{formatDate(pkg.dataChegada)}</span>
+                  <span>{formatDateTime(pkg.createdAt)}</span>
                 </div>
                 <div className="mt-4">
                   <StatusBadge status={pkg.status} />

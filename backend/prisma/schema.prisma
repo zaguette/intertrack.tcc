@@ -95,6 +95,7 @@ model Encomenda {
   funcionario_id          String            @db.Char(36)
   status_atual_id         String            @db.Char(36)
   data_entrega            DateTime?
+  retirado_por            String?           @db.VarChar(150)
   observacoes             String?           @db.Text
   created_at              DateTime          @default(now())
   updated_at              DateTime          @updatedAt

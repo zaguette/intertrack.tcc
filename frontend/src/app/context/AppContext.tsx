@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { clearSession, getStoredSession, saveSession } from "../lib/storage";
 import {
   fetchPackages as fetchPackagesFromApi,
+  fetchNotifications,
   fetchUsers,
   apiLogin,
   apiRegister,
@@ -10,7 +11,7 @@ import {
   deletePackage as apiDeletePackage,
   setApiToken
 } from "../lib/api";
-import { PackageItem, User } from "../lib/types";
+import { AppNotification, PackageItem, User } from "../lib/types";
 import { fromEncomendaApi, toEncomendaPayload, toStatusId } from "../lib/adapters";
 
 type ActionResult = { ok: boolean; error?: string };
@@ -18,6 +19,7 @@ type ActionResult = { ok: boolean; error?: string };
 interface AppContextType {
   user: User | null;
   packages: PackageItem[];
+  notifications: AppNotification[];
   theme: "light" | "dark";
   login: (identificador: string, password: string) => Promise<User | null>;
   register: (payload: {
@@ -70,12 +72,39 @@ function errorMessage(e: unknown, fallback: string) {
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [packages, setPackages] = useState<PackageItem[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const packagesRequestVersion = useRef(0);
+  const notificationsRequestVersion = useRef(0);
 
   // Sempre relê a lista do banco: a tela mostra exatamente o que está no MySQL
   async function reloadPackages() {
+    const requestVersion = ++packagesRequestVersion.current;
     const list = await fetchPackagesFromApi();
-    setPackages(list.map(fromEncomendaApi));
+    if (requestVersion !== packagesRequestVersion.current) return;
+    const mapped = list.map(fromEncomendaApi);
+    mapped.sort((a, b) => {
+      const first = new Date(a.createdAt ?? a.dataChegada ?? 0).getTime();
+      const second = new Date(b.createdAt ?? b.dataChegada ?? 0).getTime();
+      return second - first;
+    });
+    setPackages(mapped);
+  }
+
+  async function reloadNotifications() {
+    const requestVersion = ++notificationsRequestVersion.current;
+    const list = await fetchNotifications();
+    if (requestVersion !== notificationsRequestVersion.current) return;
+    setNotifications(
+      list.map((notification) => ({
+        id: notification.id,
+        message:
+          notification.mensagem ??
+          `Sua encomenda ${notification.encomenda?.codigo_rastreio ?? ""} está disponível para retirada.`,
+        packageId: notification.encomenda?.codigo_rastreio ?? notification.encomenda?.id ?? "",
+        createdAt: notification.created_at
+      }))
+    );
   }
 
   // Restaura sessão e tema
@@ -89,17 +118,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     persistTheme(nextTheme, storedSession);
   }, []);
 
-  // Carrega encomendas da API. Lista vazia é resposta válida (sem mock).
+  // Carrega encomendas da API e configura atualização automática
   useEffect(() => {
     if (!user) {
       setPackages([]);
+      setNotifications([]);
       return;
     }
 
+    // Carrega imediatamente ao entrar
     reloadPackages().catch((e) => {
       console.error("Erro ao carregar encomendas:", e);
       setPackages([]);
     });
+
+    // Mantém o estado de encomendas sincronizado com o banco.
+    const interval = setInterval(() => {
+      reloadPackages().catch(console.error);
+    }, 3000);
+
+    reloadNotifications().catch((e) => console.error("Erro ao carregar notificações:", e));
+    const notificationsInterval = setInterval(() => {
+      reloadNotifications().catch(console.error);
+    }, 3000);
+
+    // Limpa o intervalo ao sair do aplicativo
+    return () => {
+      clearInterval(interval);
+      clearInterval(notificationsInterval);
+    };
   }, [user?.id]);
 
   useEffect(() => {
@@ -121,7 +168,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const mapped: User = {
         id: serverUser.id,
         nome: serverUser.nome,
-        ra: serverUser.ra ?? serverUser.email ?? "",
+        email: serverUser.email,
+        ra: serverUser.ra ?? "",
         tipo: serverUser.tipo, // "aluno" | "funcionario" vindo da API
         cargo: serverUser.cargo
       } as User;
@@ -166,6 +214,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     clearSession();
     setApiToken(null);
     setPackages([]);
+    setNotifications([]);
     setUser(null);
   }
 
@@ -191,6 +240,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       await createPackage(toEncomendaPayload(pkg, alvo.id));
       await reloadPackages();
+      await reloadNotifications();
       return { ok: true };
     } catch (e) {
       return { ok: false, error: errorMessage(e, "Erro ao cadastrar encomenda.") };
@@ -205,9 +255,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!updates.status) {
         return { ok: false, error: "Nenhuma alteração de status informada." };
       }
-      // Hoje a API só persiste o status (não guarda quem retirou)
-      await updatePackageStatus(id, toStatusId(updates.status));
+      await updatePackageStatus(id, toStatusId(updates.status), updates.retiradoPor ?? updates.collectedBy);
       await reloadPackages();
+      await reloadNotifications();
       return { ok: true };
     } catch (e) {
       return { ok: false, error: errorMessage(e, "Erro ao atualizar encomenda.") };
@@ -218,6 +268,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       await apiDeletePackage(id);
       await reloadPackages();
+      await reloadNotifications();
       return { ok: true };
     } catch (e) {
       return { ok: false, error: errorMessage(e, "Erro ao excluir encomenda.") };
@@ -237,6 +288,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         packages,
+        notifications,
         theme,
         login,
         register,

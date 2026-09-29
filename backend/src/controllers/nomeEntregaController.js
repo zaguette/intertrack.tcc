@@ -37,7 +37,7 @@ export const nomeEntregaController = {
     try {
       const { id } = req.params;
 
-      await deletarNomeAlternativo(id);
+      await deletarNomeAlternativo(id, req.user.id);
 
       res.json({
         mensagem: "Nome alternativo removido com sucesso"

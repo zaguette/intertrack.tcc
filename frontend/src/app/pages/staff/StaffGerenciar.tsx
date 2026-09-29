@@ -16,7 +16,6 @@ export function StaffGerenciar() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const searchBy = searchParams.get("by") === "ra" ? "ra" : "nome";
-  const sortOrder = searchParams.get("order") === "antigos" ? "antigos" : "recentes";
 
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [statusFilter, setStatusFilter] = useState<PackageStatus | "todos">("todos");
@@ -35,10 +34,11 @@ export function StaffGerenciar() {
     });
 
     return filteredItems.sort((a, b) => {
-      if (sortOrder === "antigos") return (a.dataChegada ?? "").localeCompare(b.dataChegada ?? "");
-      return (b.dataChegada ?? "").localeCompare(a.dataChegada ?? "");
+      const first = new Date(a.createdAt ?? a.dataChegada ?? 0).getTime();
+      const second = new Date(b.createdAt ?? b.dataChegada ?? 0).getTime();
+      return second - first;
     });
-  }, [packages, search, statusFilter, searchBy, sortOrder]);
+  }, [packages, search, statusFilter, searchBy]);
 
   function formatDate(date: string) {
     const [year, month, day] = date.split("-");

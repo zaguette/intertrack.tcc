@@ -15,6 +15,12 @@ export const userController = {
 
             const { ra, nome, email, senha, telefone } = req.body;
 
+            if (!/^\d{6}$/.test(String(ra ?? ""))) {
+                return res.status(400).json({
+                    erro: "O RA deve conter exatamente 6 dígitos numéricos."
+                });
+            }
+
             const usuarioExiste = await prisma.usuario.findUnique({
                 where: {
                     email
@@ -119,6 +125,7 @@ const usuario = await prisma.usuario.findFirst({
                         id: usuario.id,
                         nome: usuario.nome,
                         email: usuario.email,
+                        ra: usuario.ra,
                         tipo: "aluno"
                     }
                 });
@@ -241,6 +248,7 @@ const usuario = await prisma.usuario.findFirst({
                 select: {
                     id: true,
                     codigo: true,
+                    ra: true,
                     nome: true,
                     email: true,
                     telefone: true,

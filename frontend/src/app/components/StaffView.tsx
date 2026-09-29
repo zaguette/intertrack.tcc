@@ -195,8 +195,8 @@ export default function StaffView({
       <Card className="bg-unasp-navy text-white">
         <div className="flex items-center justify-between">
           <div>
-            <div className="title-highlight mb-1 text-black">
-              <h2 className="text-lg font-semibold m-0">
+            <div className="title-highlight mb-1">
+              <h2 className="text-lg font-semibold !text-white m-0" style={{ color: "#fff" }}>
                 {editingId ? "✏️ Editar Encomenda" : "➕ Cadastrar Nova Encomenda"}
               </h2>
             </div>

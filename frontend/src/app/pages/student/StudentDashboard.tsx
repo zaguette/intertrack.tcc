@@ -4,22 +4,19 @@ import { StatCard } from "../../components/StatCard";
 import { StatusBadge } from "../../components/StatusBadge";
 import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
+import { formatDateTime } from "../../lib/adapters";
 
 export function StudentDashboard() {
   const { user, packages } = useApp();
   const navigate = useNavigate();
 
-  const myPackages = packages.filter((p) => p.ra === user?.ra);
+  // A API já retorna somente as encomendas do aluno logado
+  const myPackages = packages;
   const total = myPackages.length;
   const disponivel = myPackages.filter((p) => p.status === "disponivel").length;
   const entregues = myPackages.filter((p) => p.status === "entregue").length;
 
   const recent = myPackages.slice(0, 6);
-
-  function formatDate(date: string) {
-    const [year, month, day] = date.split("-");
-    return `${day}/${month}/${year}`;
-  }
 
   return (
     <StudentLayout>
@@ -95,7 +92,7 @@ export function StudentDashboard() {
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
                     <Calendar size={12} />
-                    <span>{formatDate(pkg.dataChegada ?? "")}</span>
+                    <span>{formatDateTime(pkg.createdAt)}</span>
                   </div>
                   <div className="mt-3">
                     <StatusBadge status={pkg.status} />

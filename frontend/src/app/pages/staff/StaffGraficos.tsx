@@ -9,7 +9,7 @@ import {
   Title,
   Tooltip,
 } from "chart.js";
-import { BarChart3, Clock3, Package, PieChart, TrendingUp } from "lucide-react";
+import { BarChart3, Package, PieChart, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { StaffLayout } from "../../components/StaffLayout";
 import { Card } from "../../components/ui/Card";
@@ -27,10 +27,6 @@ ChartJS.register(
 
 function getArrivalDate(pkg: any): string | null {
   return pkg.dataChegada ?? pkg.createdAt ?? pkg.created_at ?? pkg.availableAt ?? null;
-}
-
-function getPickupDate(pkg: any): string | null {
-  return pkg.dataRetirada ?? pkg.collectedAt ?? pkg.data_entrega ?? null;
 }
 
 function getStatus(pkg: any): string {
@@ -51,13 +47,6 @@ function formatMonth(key: string) {
   return parsed.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
 }
 
-function hoursBetween(start: string, end: string) {
-  const startDate = new Date(start).getTime();
-  const endDate = new Date(end).getTime();
-  if (Number.isNaN(startDate) || Number.isNaN(endDate) || endDate < startDate) return null;
-  return (endDate - startDate) / (1000 * 60 * 60);
-}
-
 export function StaffGraficos() {
   const { packages } = useApp();
 
@@ -68,8 +57,6 @@ export function StaffGraficos() {
 
     const dailyMap = new Map<string, number>();
     const monthlyMap = new Map<string, number>();
-    const pickupTimes: number[] = [];
-
     packages.forEach((pkg) => {
       const arrival = getArrivalDate(pkg);
       if (arrival) {
@@ -80,20 +67,11 @@ export function StaffGraficos() {
         monthlyMap.set(month, (monthlyMap.get(month) ?? 0) + 1);
       }
 
-      const pickup = getPickupDate(pkg);
-      if (arrival && pickup) {
-        const hours = hoursBetween(arrival, pickup);
-        if (hours !== null) pickupTimes.push(hours);
-      }
     });
 
     const daily = [...dailyMap.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-7);
     const monthly = [...monthlyMap.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-6);
-    const averagePickup = pickupTimes.length
-      ? pickupTimes.reduce((sum, value) => sum + value, 0) / pickupTimes.length
-      : null;
-
-    return { total, entregues, disponiveis, daily, monthly, averagePickup };
+    return { total, entregues, disponiveis, daily, monthly };
   }, [packages]);
 
   const statusData = {
@@ -147,7 +125,7 @@ export function StaffGraficos() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--app-text)]">Relatórios de encomendas</h1>
         <p className="mt-1 text-sm text-[var(--muted-text)]">
-          Acompanhe a quantidade, os status e o tempo médio de retirada das encomendas.
+          Acompanhe a quantidade e os status das encomendas.
         </p>
       </div>
 
@@ -176,17 +154,6 @@ export function StaffGraficos() {
             <div>
               <p className="text-sm text-[var(--muted-text)]">Não entregues</p>
               <p className="text-2xl font-bold text-amber-500">{report.disponiveis}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="border border-[var(--app-border)] bg-[var(--panel-bg)]">
-          <div className="flex items-center gap-3">
-            <Clock3 size={20} className="text-[var(--accent-text)]" />
-            <div>
-              <p className="text-sm text-[var(--muted-text)]">Tempo médio de retirada</p>
-              <p className="text-2xl font-bold text-[var(--app-text)]">
-                {report.averagePickup === null ? "—" : `${report.averagePickup.toFixed(1)} h`}
-              </p>
             </div>
           </div>
         </Card>

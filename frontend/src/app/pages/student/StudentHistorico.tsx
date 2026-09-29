@@ -2,13 +2,20 @@ import { CalendarDays, Clock3, UserRound } from "lucide-react";
 import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
 import { Card } from "../../components/ui/Card";
+import { formatDateTime } from "../../lib/adapters";
 
 export function StudentHistorico() {
-  const { packages, user } = useApp();
-  const myPackages = packages.filter((pkg) => pkg.ra === user?.ra);
+  const { packages } = useApp();
+
+  // A API já retorna somente as encomendas do aluno logado
+  const myPackages = packages;
 
   function formatDate(date?: string) {
     if (!date) return "Pendente";
+    if (date.includes("T")) {
+      const parsed = new Date(date);
+      return Number.isNaN(parsed.getTime()) ? "Pendente" : parsed.toLocaleDateString("pt-BR");
+    }
     const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
   }
@@ -25,6 +32,10 @@ export function StudentHistorico() {
     });
   }
 
+  function getPickupTime(pkg: (typeof myPackages)[number]) {
+    return pkg.horarioRetirada ?? formatTime(pkg.collectedAt);
+  }
+
   return (
     <StudentLayout>
       <div className="mx-auto max-w-7xl px-0 py-0">
@@ -34,6 +45,10 @@ export function StudentHistorico() {
             Visualização detalhada com data de chegada, retirada, retirado por e horário.
           </p>
         </div>
+
+        {myPackages.length === 0 && (
+          <p className="text-sm text-[var(--muted-text)]">Nenhuma encomenda registrada.</p>
+        )}
 
         <div className="grid gap-4">
           {myPackages.map((pkg) => (
@@ -50,7 +65,9 @@ export function StudentHistorico() {
                       <CalendarDays size={16} />
                       Chegada
                     </div>
-                    <p className="mt-2 text-sm text-[var(--muted-text)]">{pkg.dataChegada}</p>
+                    <p className="mt-2 text-sm text-[var(--muted-text)]">
+                      {formatDateTime(pkg.createdAt)}
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-text)]">
@@ -65,8 +82,8 @@ export function StudentHistorico() {
                       Retirado por
                     </div>
                     <p className="mt-2 text-sm text-[var(--muted-text)]">
-                      {pkg.collectedBy
-                        ? `${pkg.collectedBy}${pkg.collectedByRa ? ` (RA: ${pkg.collectedByRa})` : ""}`
+                      {pkg.retiradoPor ?? pkg.collectedBy
+                        ? `${pkg.retiradoPor ?? pkg.collectedBy}${pkg.collectedByRa ? ` (RA: ${pkg.collectedByRa})` : ""}`
                         : "Pendente"}
                     </p>
                   </div>
@@ -75,7 +92,7 @@ export function StudentHistorico() {
                       <Clock3 size={16} />
                       Horário
                     </div>
-                    <p className="mt-2 text-sm text-[var(--muted-text)]">{formatTime(pkg.collectedAt)}</p>
+                    <p className="mt-2 text-sm text-[var(--muted-text)]">{getPickupTime(pkg)}</p>
                   </div>
                 </div>
               </div>

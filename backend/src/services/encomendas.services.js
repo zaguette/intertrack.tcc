@@ -44,7 +44,32 @@ export const criarEncomenda = async (dados, funcionario_id) => {
       }
     });
 
+    await tx.notificacao.create({
+      data: {
+        id: uuidv4(),
+        usuario_id: destinatario_usuario_id,
+        encomenda_id: encomenda.id,
+        tipo: "nova_encomenda",
+        mensagem: `Sua encomenda ${codigo_rastreio} está disponível para retirada.`
+      }
+    });
+
     return encomenda;
+  });
+};
+
+export const listarNotificacoes = async (usuario_id) => {
+  return await prisma.notificacao.findMany({
+    where: { usuario_id },
+    include: {
+      encomenda: {
+        select: {
+          id: true,
+          codigo_rastreio: true
+        }
+      }
+    },
+    orderBy: { created_at: "desc" }
   });
 };
 
@@ -92,6 +117,7 @@ export const listarEncomendas = async (
 
   return await prisma.encomenda.findMany({
     where,
+    orderBy: { created_at: "desc" },
 
     include: {
       statusAtual: true,
@@ -149,7 +175,8 @@ export const buscarEncomendaPorId = async (id) => {
 export const atualizarStatusEncomenda = async (
   id,
   status_atual_id,
-  funcionario_id
+  funcionario_id,
+  retirado_por
 ) => {
   return await prisma.$transaction(async (tx) => {
     const encomenda = await tx.encomenda.update({
@@ -158,7 +185,9 @@ export const atualizarStatusEncomenda = async (
       },
 
       data: {
-        status_atual_id
+        status_atual_id,
+        data_entrega: retirado_por ? new Date() : null,
+        retirado_por: retirado_por || null
       }
     });
 

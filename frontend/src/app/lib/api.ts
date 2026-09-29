@@ -83,6 +83,17 @@ export async function fetchPackages() {
   return request<any[]>("/encomendas");
 }
 
+export async function fetchNotifications() {
+  return request<
+    {
+      id: string;
+      mensagem?: string | null;
+      created_at: string;
+      encomenda?: { id: string; codigo_rastreio?: string | null };
+    }[]
+  >("/encomendas/notificacoes");
+}
+
 export async function createPackage(payload: {
   codigo_rastreio: string;
   destinatario_usuario_id: string;
@@ -94,10 +105,17 @@ export async function createPackage(payload: {
   });
 }
 
-export async function updatePackageStatus(id: string, statusAtualId: string) {
+export async function updatePackageStatus(
+  id: string,
+  statusAtualId: string,
+  retiradoPor?: string
+) {
   return request<any>(`/encomendas/${id}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status_atual_id: statusAtualId }),
+    body: JSON.stringify({
+      status_atual_id: statusAtualId,
+      ...(retiradoPor ? { retirado_por: retiradoPor } : {})
+    }),
   });
 }
 
@@ -107,6 +125,7 @@ export async function deletePackage(id: string) {
 
 export default {
   fetchPackages,
+  fetchNotifications,
   fetchUsers,
   apiLogin,
   apiRegister,

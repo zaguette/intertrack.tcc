@@ -4,10 +4,12 @@ import { toast } from "sonner";
 import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
 import { Card } from "../../components/ui/Card";
+import { RA_PATTERN } from "../../lib/utils";
 
 type StudentProfileData = {
   fullName: string;
   ra: string;
+  email: string;
 };
 
 function getProfileStorageKey(ra: string) {
@@ -21,6 +23,7 @@ export function StudentPerfil() {
   const [profile, setProfile] = useState<StudentProfileData>({
     fullName: user?.nome ?? "",
     ra: user?.ra ?? "",
+    email: user?.email ?? "",
   });
   const [draft, setDraft] = useState<StudentProfileData>(profile);
   const [isEditing, setIsEditing] = useState(false);
@@ -31,6 +34,7 @@ export function StudentPerfil() {
     const fallback: StudentProfileData = {
       fullName: user.nome ?? user.name ?? "",
       ra: user.ra,
+      email: user.email ?? "",
     };
 
     const raw = localStorage.getItem(getProfileStorageKey(user.ra));
@@ -45,6 +49,7 @@ export function StudentPerfil() {
       const normalized: StudentProfileData = {
         fullName: parsed.fullName || fallback.fullName,
         ra: parsed.ra || fallback.ra,
+        email: fallback.email,
       };
       setProfile(normalized);
       setDraft(normalized);
@@ -60,14 +65,15 @@ export function StudentPerfil() {
       toast.error("Informe o nome completo.");
       return;
     }
-    if (!draft.ra.trim()) {
-      toast.error("Informe o RA.");
+    if (!RA_PATTERN.test(draft.ra)) {
+      toast.error("O RA deve conter exatamente 6 dígitos numéricos.");
       return;
     }
 
     const nextProfile: StudentProfileData = {
       fullName: draft.fullName.trim(),
       ra: draft.ra.trim(),
+      email: profile.email,
     };
 
     localStorage.setItem(getProfileStorageKey(user.ra), JSON.stringify(nextProfile));
@@ -152,13 +158,25 @@ export function StudentPerfil() {
               {isEditing ? (
                 <input
                   type="text"
+                  inputMode="numeric"
+                  maxLength={6}
                   value={draft.ra}
-                  onChange={(e) => setDraft((prev) => ({ ...prev, ra: e.target.value }))}
+                  onChange={(e) =>
+                    setDraft((prev) => ({
+                      ...prev,
+                      ra: e.target.value.replace(/\D/g, "").slice(0, 6),
+                    }))
+                  }
                   className="mt-2 w-full rounded-lg border border-[var(--app-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm text-[var(--app-text)] focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               ) : (
                 <p className="mt-2 text-sm text-[var(--muted-text)]">{profile.ra}</p>
               )}
+            </div>
+
+            <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4 sm:col-span-2">
+              <p className="text-xs uppercase tracking-wide text-[var(--muted-text)]">E-mail</p>
+              <p className="mt-2 text-sm text-[var(--muted-text)]">{profile.email || "—"}</p>
             </div>
 
             <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4">

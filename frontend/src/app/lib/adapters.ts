@@ -44,15 +44,27 @@ function toLocalDate(value?: string | null) {
 
 // API (Prisma) -> formato usado pelas telas
 export function fromEncomendaApi(e: any): PackageItem {
+  const chegada = e.created_at ? new Date(e.created_at) : null;
+  const retirada = e.data_entrega ? new Date(e.data_entrega) : null;
+
   return {
     id: e.id,
     codigo: e.codigo_rastreio ?? e.codigo ?? "",
+    destinatario: e.destinatario?.nome ?? "",
     aluno: e.destinatario?.nome ?? "",
     ra: e.destinatario?.ra ?? "",
     dataChegada: toLocalDate(e.created_at) ?? "",
+    horarioChegada: chegada && !Number.isNaN(chegada.getTime())
+      ? chegada.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+      : undefined,
     createdAt: e.created_at ?? undefined, // data + hora exatas do cadastro
     dataRetirada: toLocalDate(e.data_entrega),
+    horarioRetirada: retirada && !Number.isNaN(retirada.getTime())
+      ? retirada.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+      : undefined,
+    retiradoPor: e.retirado_por ?? undefined,
     collectedAt: e.data_entrega ?? undefined,
+    collectedBy: e.retirado_por ?? undefined,
     status: statusFromApi(e),
   } as PackageItem;
 }

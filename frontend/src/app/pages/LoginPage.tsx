@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useApp } from "../context/AppContext";
+import { RA_PATTERN } from "../lib/utils";
 
 export function LoginPage() {
   const { login, register, user } = useApp();
@@ -10,6 +11,7 @@ export function LoginPage() {
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const isRegister = mode === "register";
+  const [staffLogin, setStaffLogin] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [ra, setRa] = useState("");
@@ -25,8 +27,12 @@ export function LoginPage() {
   }, [user, navigate]);
 
   async function handleLogin() {
-    if (!ra.trim()) {
-      toast.error("Informe seu RA.");
+    if (!staffLogin && !RA_PATTERN.test(ra)) {
+      toast.error("O RA deve conter exatamente 6 dígitos numéricos.");
+      return;
+    }
+    if (staffLogin && !contact.trim()) {
+      toast.error("Informe o e-mail do funcionário.");
       return;
     }
     if (!password.trim()) {
@@ -34,7 +40,7 @@ export function LoginPage() {
       return;
     }
     try {
-      const loggedUser = await login(ra, password);
+      const loggedUser = await login(staffLogin ? contact : ra, password);
       if (!loggedUser) {
         toast.error("Credenciais inválidas. Verifique seu RA e senha.");
         return;
@@ -52,8 +58,8 @@ export function LoginPage() {
       toast.error("Informe seu nome completo.");
       return;
     }
-    if (!ra.trim()) {
-      toast.error("Informe seu RA.");
+    if (!RA_PATTERN.test(ra)) {
+      toast.error("O RA deve conter exatamente 6 dígitos numéricos.");
       return;
     }
     if (!contact.trim()) {
@@ -103,6 +109,7 @@ export function LoginPage() {
     setShowPassword(false);
     setPassword("");
     setRa("");
+    setStaffLogin(false);
 
     if (nextMode === "login") {
       setFullName("");
@@ -161,16 +168,22 @@ export function LoginPage() {
               </div>
             )}
 
-            {/* RA */}
+            {/* Identificador */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                RA
+                {staffLogin && !isRegister ? "E-mail do funcionário" : "RA"}
               </label>
               <input
-                type="text"
-                placeholder="Ex: 123456"
-                value={ra}
-                onChange={(e) => setRa(e.target.value)}
+                type={staffLogin && !isRegister ? "email" : "text"}
+                placeholder={staffLogin && !isRegister ? "Ex: func@unasp.local" : "Ex: 123456"}
+                inputMode={staffLogin && !isRegister ? "email" : "numeric"}
+                maxLength={staffLogin && !isRegister ? undefined : 6}
+                value={staffLogin && !isRegister ? contact : ra}
+                onChange={(e) =>
+                  staffLogin && !isRegister
+                    ? setContact(e.target.value)
+                    : setRa(e.target.value.replace(/\D/g, "").slice(0, 6))
+                }
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     isRegister ? handleRegister() : handleLogin();
@@ -179,6 +192,20 @@ export function LoginPage() {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
               />
             </div>
+
+            {!isRegister && (
+              <button
+                type="button"
+                onClick={() => {
+                  setStaffLogin((current) => !current);
+                  setRa("");
+                  setContact("");
+                }}
+                className="w-full text-left text-xs font-medium text-blue-700 hover:text-blue-900"
+              >
+                {staffLogin ? "Entrar como aluno usando RA" : "Acesso de funcionário por e-mail"}
+              </button>
+            )}
 
             {isRegister && (
               <div>

@@ -18,9 +18,8 @@ function normalizeNotificationId(id: string) {
 }
 
 export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHeaderProps) {
-  const { packages, user } = useApp();
-  const lastAvailableIdsRef = useRef<string[] | null>(null);
-  const lastDeliveredIdsRef = useRef<string[] | null>(null);
+  const { notifications: userNotifications, user } = useApp();
+  const lastNotificationIdsRef = useRef<string[] | null>(null);
   const bellContainerRef = useRef<HTMLDivElement | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
@@ -31,39 +30,12 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     [readNotificationIds]
   );
 
-  const availablePackages = useMemo(() => {
-    if (!user || user.tipo !== "aluno") return [];
-    return packages.filter((pkg) => pkg.ra === user.ra && pkg.status === "disponivel");
-  }, [packages, user]);
-
-  const deliveredPackages = useMemo(() => {
-    if (!user || user.tipo !== "aluno") return [];
-    return packages.filter(
-      (pkg) => pkg.ra === user.ra && pkg.status === "entregue" && !!pkg.collectedBy
-    );
-  }, [packages, user]);
-
   const notifications = useMemo(() => {
-    const availableNotifications = availablePackages.map((pkg) => ({
-      id: `available:${pkg.id}`,
-      packageId: pkg.id,
-      message: `Sua encomenda ${pkg.codigo} está disponível para retirada.`,
-      detail: `Chegada: ${formatDate(pkg.dataChegada)}`,
-      sortDate: pkg.dataChegada ?? "",
+    return userNotifications.map((notification) => ({
+      ...notification,
+      detail: formatDateTime(notification.createdAt)
     }));
-
-    const deliveredNotifications = deliveredPackages.map((pkg) => ({
-      id: `delivered:${pkg.id}`,
-      packageId: pkg.id,
-      message: `Sua encomenda ${pkg.codigo} foi retirada por: ${pkg.collectedBy}.`,
-      detail: `Retirada: ${formatDate(pkg.dataRetirada ?? pkg.dataChegada)}`,
-      sortDate: pkg.collectedAt ?? pkg.dataRetirada ?? pkg.dataChegada ?? "",
-    }));
-
-    return [...deliveredNotifications, ...availableNotifications].sort((a, b) =>
-      (b.sortDate ?? "").localeCompare(a.sortDate ?? "")
-    );
-  }, [availablePackages, deliveredPackages]);
+  }, [userNotifications]);
 
   const unreadCount = useMemo(
     () => {
@@ -91,6 +63,13 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     if (!date) return "—";
     const [year, month, day] = date.split("-");
     return `${day}/${month}/${year}`;
+  }
+
+  function formatDateTime(date?: string) {
+    if (!date) return "—";
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return "—";
+    return parsed.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
   }
 
   function sendRealtimeNotification(message: string) {
@@ -189,28 +168,6 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     });
   }
 
-  function markPackagesAsRead(packageIds: string[]) {
-    if (packageIds.length === 0) return;
-
-    setReadNotificationIds((prev) => {
-      const nextSet = new Set(prev);
-      packageIds.forEach((packageId) => {
-        nextSet.add(`pkg:${packageId}`);
-        nextSet.add(`available:${packageId}`);
-        nextSet.add(`delivered:${packageId}`);
-      });
-
-      if (nextSet.size === prev.length) return prev;
-
-      const next = Array.from(nextSet);
-      const storageKey = getReadStorageKey();
-      if (storageKey) {
-        localStorage.setItem(storageKey, JSON.stringify(next));
-      }
-      return next;
-    });
-  }
-
   function handleToggleNotifications() {
     setNotificationsOpen((current) => {
       const next = !current;
@@ -235,62 +192,24 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
 
   useEffect(() => {
     if (!user || user.tipo !== "aluno") {
-      lastAvailableIdsRef.current = null;
-      lastDeliveredIdsRef.current = null;
+      lastNotificationIdsRef.current = null;
       return;
     }
 
-    const currentAvailableIds = availablePackages.map((pkg) => pkg.id).sort();
-    const previousAvailableIds = lastAvailableIdsRef.current;
+    const currentIds = userNotifications.map((notification) => notification.id);
+    const previousIds = lastNotificationIdsRef.current;
 
-    if (previousAvailableIds) {
-      const newAvailablePackages = availablePackages.filter(
-        (pkg) => !previousAvailableIds.includes(pkg.id)
+    if (previousIds) {
+      const newNotifications = userNotifications.filter(
+        (notification) => !previousIds.includes(notification.id)
       );
-
-      if (newAvailablePackages.length > 0) {
-        const message =
-          newAvailablePackages.length === 1
-            ? `Sua encomenda ${newAvailablePackages[0].codigo} já está disponível para retirada.`
-            : `${newAvailablePackages.length} novas encomendas estão disponíveis para retirada.`;
-
-        sendRealtimeNotification(message);
-        markPackagesAsRead(newAvailablePackages.map((pkg) => pkg.id));
-      }
+      newNotifications.forEach((notification) => sendRealtimeNotification(notification.message));
     }
 
-    lastAvailableIdsRef.current = currentAvailableIds;
-  }, [availablePackages, user]);
+    lastNotificationIdsRef.current = currentIds;
+  }, [userNotifications, user]);
 
-  useEffect(() => {
-    if (!user || user.tipo !== "aluno") {
-      lastDeliveredIdsRef.current = null;
-      return;
-    }
-
-    const currentDeliveredIds = deliveredPackages.map((pkg) => pkg.id).sort();
-    const previousDeliveredIds = lastDeliveredIdsRef.current;
-
-    if (previousDeliveredIds) {
-      const newDeliveredPackages = deliveredPackages.filter(
-        (pkg) => !previousDeliveredIds.includes(pkg.id)
-      );
-
-      if (newDeliveredPackages.length > 0) {
-        const first = newDeliveredPackages[0];
-        const message =
-          newDeliveredPackages.length === 1
-            ? `Sua encomenda ${first.codigo} foi retirada por: ${first.collectedBy}.`
-            : `${newDeliveredPackages.length} encomendas foram registradas como retiradas.`;
-
-        sendRealtimeNotification(message);
-        markPackagesAsRead(newDeliveredPackages.map((pkg) => pkg.id));
-      }
-    }
-
-    lastDeliveredIdsRef.current = currentDeliveredIds;
-  }, [deliveredPackages, user]);
-
+  // Marca como lido quando a aba de notificações for aberta
   useEffect(() => {
     if (!notificationsOpen) return;
 
@@ -312,6 +231,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     });
   }, [notificationsOpen, notifications]);
 
+  // Fechar menu ao clicar fora
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
       if (!bellContainerRef.current) return;

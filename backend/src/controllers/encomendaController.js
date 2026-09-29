@@ -1,6 +1,7 @@
 import {
   criarEncomenda,
   listarEncomendas,
+  listarNotificacoes,
   buscarEncomendaPorId,
   atualizarStatusEncomenda,
   deletarEncomenda
@@ -35,6 +36,15 @@ export const encomendaController = {
 
     } catch (error) {
       console.error("ERRO AO LISTAR ENCOMENDAS:", error);
+      res.status(500).json({ erro: error.message });
+    }
+  },
+
+  async listNotifications(req, res) {
+    try {
+      const notificacoes = await listarNotificacoes(req.user.id);
+      res.json(notificacoes);
+    } catch (error) {
       res.status(500).json({ erro: error.message });
     }
   },
@@ -77,12 +87,13 @@ export const encomendaController = {
 
       const funcionario_id = req.user.id;
 
-      const { status_atual_id } = req.body;
+      const { status_atual_id, retirado_por } = req.body;
 
       const encomenda = await atualizarStatusEncomenda(
         id,
         status_atual_id,
-        funcionario_id
+        funcionario_id,
+        retirado_por
       );
 
       res.json(encomenda);

@@ -22,6 +22,13 @@ router.get(
   encomendaController.list
 );
 
+// Notificações — cada usuário vê somente as próprias notificações
+router.get(
+  '/notificacoes',
+  verificarToken,
+  encomendaController.listNotifications
+);
+
 // Buscar encomenda por ID — aluno só a própria, funcionário qualquer uma (checagem no controller)
 router.get(
   '/:id',
