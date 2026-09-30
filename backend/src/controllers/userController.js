@@ -430,7 +430,6 @@ export const userController = {
                 erro: "Erro ao desativar usuário."
             });
 
+                }
         }
-
-    }
 };
