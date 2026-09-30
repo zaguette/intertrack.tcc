@@ -45,6 +45,11 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
     [notifications, readNotificationSet, readNotificationsHydrated]
   );
 
+  const visibleNotifications = useMemo(
+    () => notifications.filter((notification) => !isNotificationRead(notification)),
+    [notifications, readNotificationSet]
+  );
+
   const notificationCount =
     user?.tipo === "aluno"
       ? readNotificationsHydrated
@@ -169,25 +174,7 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
   }
 
   function handleToggleNotifications() {
-    setNotificationsOpen((current) => {
-      const next = !current;
-      if (next) {
-        setReadNotificationIds((prev) => {
-          const merged = new Set(prev);
-          notifications.forEach((notification) => {
-            merged.add(normalizeNotificationId(notification.id));
-            merged.add(`pkg:${notification.packageId}`);
-          });
-          const nextIds = Array.from(merged);
-          const storageKey = getReadStorageKey();
-          if (storageKey) {
-            localStorage.setItem(storageKey, JSON.stringify(nextIds));
-          }
-          return nextIds;
-        });
-      }
-      return next;
-    });
+    setNotificationsOpen((current) => !current);
   }
 
   useEffect(() => {
@@ -196,40 +183,21 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
       return;
     }
 
+    if (!readNotificationsHydrated) return;
+
     const currentIds = userNotifications.map((notification) => notification.id);
     const previousIds = lastNotificationIdsRef.current;
 
     if (previousIds) {
       const newNotifications = userNotifications.filter(
-        (notification) => !previousIds.includes(notification.id)
+        (notification) =>
+          !previousIds.includes(notification.id) && !isNotificationRead(notification)
       );
       newNotifications.forEach((notification) => sendRealtimeNotification(notification.message));
     }
 
     lastNotificationIdsRef.current = currentIds;
-  }, [userNotifications, user]);
-
-  // Marca como lido quando a aba de notificações for aberta
-  useEffect(() => {
-    if (!notificationsOpen) return;
-
-    setReadNotificationIds((prev) => {
-      const merged = new Set(prev);
-      notifications.forEach((notification) => {
-        merged.add(normalizeNotificationId(notification.id));
-        merged.add(`pkg:${notification.packageId}`);
-      });
-      const nextIds = Array.from(merged);
-
-      if (nextIds.length === prev.length) return prev;
-
-      const storageKey = getReadStorageKey();
-      if (storageKey) {
-        localStorage.setItem(storageKey, JSON.stringify(nextIds));
-      }
-      return nextIds;
-    });
-  }, [notificationsOpen, notifications]);
+  }, [userNotifications, user, readNotificationsHydrated, readNotificationSet]);
 
   // Fechar menu ao clicar fora
   useEffect(() => {
@@ -279,23 +247,18 @@ export function StudentHeader({ availableCount = 0, onOpenSidebar }: StudentHead
                 <span className="text-xs text-[var(--muted-text)]">Não lidas: {unreadCount}</span>
               </div>
 
-              {notifications.length === 0 ? (
+              {visibleNotifications.length === 0 ? (
                 <p className="rounded-lg bg-black/5 px-3 py-2 text-xs text-[var(--muted-text)]">
                   Você não possui notificações no momento.
                 </p>
               ) : (
                 <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-                  {notifications.map((notification) => {
-                    const isRead = isNotificationRead(notification);
+                  {visibleNotifications.map((notification) => {
                     return (
                       <button
                         key={notification.id}
                         onClick={() => markNotificationAsRead(notification.id)}
-                        className={`w-full rounded-lg border px-3 py-2 text-left transition ${
-                          isRead
-                            ? "border-[var(--app-border)] bg-[var(--panel-bg)]/70"
-                            : "border-emerald-500/35 bg-[var(--accent-bg)]"
-                        }`}
+                        className="w-full rounded-lg border border-emerald-500/35 bg-[var(--accent-bg)] px-3 py-2 text-left transition"
                       >
                         <p className="text-sm font-semibold text-[var(--app-text)]">
                           {notification.message}

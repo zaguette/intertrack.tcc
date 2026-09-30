@@ -94,18 +94,26 @@ export const userController = {
     // =========================
     async login(req, res) {
         try {
-         const { ra, senha } = req.body;
-         const identificador = ra;
+            // O identificador pode ser RA (aluno) ou e-mail (aluno/funcionário).
+            // Aceita "ra", "identificador" ou "email" no corpo da requisição.
+            const identificador = String(
+                req.body.ra ?? req.body.identificador ?? req.body.email ?? ""
+            ).trim();
+            const senha = String(req.body.senha ?? "");
 
-if (!identificador || !senha) {
-    return res.status(400).json({ erro: "Informe o RA/e-mail e a senha." });
-}
+            if (!identificador || !senha) {
+                return res.status(400).json({ erro: "Informe o RA/e-mail e a senha." });
+            }
 
-const usuario = await prisma.usuario.findFirst({
-    where: {
-        OR: [{ ra: identificador }, { email: identificador }]
-    }
-});
+            // ==========================================
+            // TENTA LOGIN COMO USUÁRIO/ALUNO
+            // ==========================================
+            const usuario = await prisma.usuario.findFirst({
+                where: {
+                    OR: [{ ra: identificador }, { email: identificador }]
+                }
+            });
+
             if (usuario) {
                 if (!usuario.ativo) {
                     return res.status(403).json({
@@ -124,17 +132,18 @@ const usuario = await prisma.usuario.findFirst({
                     });
                 }
 
-               const token = jwt.sign(
-    {
-        id: usuario.id,
-        email: usuario.email,
-        tipo: "aluno"
-    },
-    getSecret(),        // <-- era JWT_SECRET
-    {
-        expiresIn: "8h"
-    }
-);
+                const token = jwt.sign(
+                    {
+                        id: usuario.id,
+                        email: usuario.email,
+                        tipo: "aluno"
+                    },
+                    getSecret(),
+                    {
+                        expiresIn: "8h"
+                    }
+                );
+
                 return res.json({
                     auth: true,
                     token,
@@ -149,11 +158,11 @@ const usuario = await prisma.usuario.findFirst({
             }
 
             // ==========================================
-            // TENTA LOGIN COMO FUNCIONÁRIO
+            // TENTA LOGIN COMO FUNCIONÁRIO (por e-mail)
             // ==========================================
             const funcionario = await prisma.funcionario.findUnique({
                 where: {
-                    email
+                    email: identificador
                 }
             });
 
@@ -227,7 +236,7 @@ const usuario = await prisma.usuario.findFirst({
                 select: {
                     id: true,
                     codigo: true,
-                    ra: true, 
+                    ra: true,
                     nome: true,
                     email: true,
                     telefone: true,

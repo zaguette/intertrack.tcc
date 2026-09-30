@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Info } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -279,24 +279,6 @@ export function LoginPage() {
             )}
           </div>
 
-          {/* Credenciais de teste */}
-          <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-blue-800">
-              <Info size={14} />
-              Credenciais de teste
-            </div>
-            <div className="space-y-1 text-xs text-blue-700">
-              <p>
-                <span className="font-semibold">Aluno:</span> RA: <code className="rounded bg-blue-100 px-1">123456</code> | Senha: qualquer
-              </p>
-              <p>
-                <span className="font-semibold">Funcionário:</span> RA/E-mail: <code className="rounded bg-blue-100 px-1">func@unasp.local</code> | Senha: qualquer
-              </p>
-              <p>
-                <span className="font-semibold">Novo aluno:</span> use a aba <strong>Cadastrar</strong> para criar sua conta.
-              </p>
-            </div>
-          </div>
         </div>
 
         <p className="mt-4 text-center text-xs text-blue-200">
