@@ -18,7 +18,8 @@ export const encomendaController = {
       res.status(201).json(resultado);
 
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      console.error("ERRO AO CRIAR ENCOMENDA:", error);
+      res.status(500).json({ erro: "Não foi possível cadastrar a encomenda." });
     }
   },
 
@@ -99,7 +100,8 @@ export const encomendaController = {
       res.json(encomenda);
 
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      console.error("ERRO AO ATUALIZAR STATUS:", error);
+      res.status(500).json({ erro: "Não foi possível atualizar o status da encomenda." });
     }
   },
 

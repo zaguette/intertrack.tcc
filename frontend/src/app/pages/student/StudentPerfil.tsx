@@ -58,7 +58,11 @@ export function StudentPerfil() {
       email: profile.email,
     };
 
-    updateProfile(user.id, { nome: nextProfile.fullName, email: nextProfile.email })
+    updateProfile(user.id, {
+      nome: nextProfile.fullName,
+      email: nextProfile.email,
+      ra: nextProfile.ra,
+    })
       .then(() => {
         setProfile(nextProfile);
         setDraft(nextProfile);
