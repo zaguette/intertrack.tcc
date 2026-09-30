@@ -87,7 +87,7 @@ export async function fetchProfile() {
   return data.usuario;
 }
 
-export async function updateProfile(id: string, payload: { nome: string; email: string }) {
+export async function updateProfile(id: string, payload: { nome: string; email: string; ra: string }) {
   return request<ApiUser>(`/usuarios/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),

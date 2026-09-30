@@ -12,7 +12,6 @@ const DRAFT_KEY = "intertrack_staff_cadastrar_draft_v2";
 
 const statusOptions: { value: PackageStatus; label: string }[] = [
   { value: "disponivel", label: "Disponível" },
-  { value: "entregue", label: "Entregue" },
 ];
 
 type StaffDraft = {
@@ -51,7 +50,7 @@ export function StaffCadastrar() {
       return {
         ra: parsed.ra ?? "",
         codigo: parsed.codigo ?? "",
-        status: parsed.status === "entregue" ? "entregue" : "disponivel",
+        status: "disponivel",
       };
     } catch {
       return fallback;

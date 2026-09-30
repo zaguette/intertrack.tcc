@@ -96,6 +96,20 @@ export function StudentHistorico() {
                   </div>
                 </div>
               </div>
+              {pkg.history && pkg.history.length > 0 && (
+                <div className="mt-4 border-t border-[var(--app-border)] pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-text)]">
+                    Alterações de status
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                    {pkg.history.map((event) => (
+                      <span key={event.id} className="text-xs text-[var(--muted-text)]">
+                        {event.status} · {formatDateTime(event.createdAt)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           ))}
         </div>

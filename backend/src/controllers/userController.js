@@ -312,7 +312,7 @@ export const userController = {
 
             const { id } = req.params;
 
-            const { nome, email, telefone, senha } = req.body;
+            const { nome, email, ra, telefone, senha } = req.body;
 
             const usuario = await prisma.usuario.findUnique({
                 where: {
@@ -342,6 +342,7 @@ export const userController = {
                 data: {
                     nome,
                     email,
+                    ra,
                     telefone,
                     senha: senhaAtualizada
                 },
