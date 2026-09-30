@@ -37,6 +37,16 @@ function statusFromApi(e: any): PackageStatus {
   return "pending" as PackageStatus;
 }
 
+function historyFromApi(e: any) {
+  return Array.isArray(e.historicos)
+    ? e.historicos.map((item: any) => ({
+        id: item.id,
+        status: item.status?.nome_status ?? item.status?.codigo ?? item.status_id,
+        createdAt: item.data_alteracao,
+      }))
+    : [];
+}
+
 function toLocalDate(value?: string | null) {
   if (!value) return undefined;
   return new Date(value).toLocaleDateString("sv-SE"); // yyyy-mm-dd
@@ -65,6 +75,7 @@ export function fromEncomendaApi(e: any): PackageItem {
     retiradoPor: e.retirado_por ?? undefined,
     collectedAt: e.data_entrega ?? undefined,
     collectedBy: e.retirado_por ?? undefined,
+    history: historyFromApi(e),
     status: statusFromApi(e),
   } as PackageItem;
 }

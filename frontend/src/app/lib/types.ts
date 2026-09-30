@@ -50,6 +50,7 @@ export type PackageItem = {
   collectedAt?: string;
   collectedBy?: string;
   collectedByRa?: string;
+  history?: { id: string; status: string; createdAt?: string }[];
   // common
   status: PackageStatus;
 };

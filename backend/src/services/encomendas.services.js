@@ -131,7 +131,11 @@ export const listarEncomendas = async (
         }
       },
 
-      remetente: true
+      remetente: true,
+      historicos: {
+        include: { status: true },
+        orderBy: { data_alteracao: "asc" }
+      }
     }
   });
 };

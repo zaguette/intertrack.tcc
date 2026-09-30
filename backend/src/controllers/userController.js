@@ -7,6 +7,22 @@ const getSecret = () => process.env.JWT_SECRET;
 
 export const userController = {
 
+    async profile(req, res) {
+        try {
+            const isFuncionario = req.user.tipo === "funcionario";
+            const model = isFuncionario ? prisma.funcionario : prisma.usuario;
+            const select = isFuncionario
+                ? { id: true, nome: true, email: true, cargo: true, ativo: true }
+                : { id: true, nome: true, email: true, ra: true, ativo: true };
+            const usuario = await model.findUnique({ where: { id: req.user.id }, select });
+            if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
+            return res.status(200).json({ mensagem: "Perfil carregado.", usuario: { ...usuario, tipo: req.user.tipo } });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ erro: "Erro ao carregar perfil." });
+        }
+    },
+
     // =========================
     // CADASTRO DE USUÁRIO
     // =========================
@@ -78,15 +94,16 @@ export const userController = {
     // =========================
     async login(req, res) {
         try {
-         const { email, senha } = req.body; // "email" pode conter o RA ou o e-mail
+         const { ra, senha } = req.body;
+         const identificador = ra;
 
-if (!email || !senha) {
+if (!identificador || !senha) {
     return res.status(400).json({ erro: "Informe o RA/e-mail e a senha." });
 }
 
 const usuario = await prisma.usuario.findFirst({
     where: {
-        OR: [{ email }, { ra: email }]
+        OR: [{ ra: identificador }, { email: identificador }]
     }
 });
             if (usuario) {

@@ -27,12 +27,7 @@ router.post("/login", userController.login);
 // =========================
 
 // Perfil do usuário autenticado
-router.get("/perfil", verificarToken, (req, res) => {
-    return res.status(200).json({
-        mensagem: "Usuário autenticado com sucesso!",
-        usuario: req.user
-    });
-});
+router.get("/perfil", verificarToken, userController.profile);
 
 // =========================
 // CRUD DE USUÁRIOS

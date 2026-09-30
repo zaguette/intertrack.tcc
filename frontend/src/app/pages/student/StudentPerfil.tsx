@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
+import { fetchProfile, updateProfile } from "../../lib/api";
 import { Card } from "../../components/ui/Card";
 import { RA_PATTERN } from "../../lib/utils";
 
@@ -11,10 +12,6 @@ type StudentProfileData = {
   ra: string;
   email: string;
 };
-
-function getProfileStorageKey(ra: string) {
-  return `intertrack_student_profile_v1_${ra}`;
-}
 
 export function StudentPerfil() {
   const { user, packages } = useApp();
@@ -31,32 +28,17 @@ export function StudentPerfil() {
   useEffect(() => {
     if (!user?.ra) return;
 
-    const fallback: StudentProfileData = {
-      fullName: user.nome ?? user.name ?? "",
-      ra: user.ra,
-      email: user.email ?? "",
-    };
-
-    const raw = localStorage.getItem(getProfileStorageKey(user.ra));
-    if (!raw) {
-      setProfile(fallback);
-      setDraft(fallback);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as StudentProfileData;
-      const normalized: StudentProfileData = {
-        fullName: parsed.fullName || fallback.fullName,
-        ra: parsed.ra || fallback.ra,
-        email: fallback.email,
-      };
-      setProfile(normalized);
-      setDraft(normalized);
-    } catch {
-      setProfile(fallback);
-      setDraft(fallback);
-    }
+    fetchProfile()
+      .then((serverProfile) => {
+        const nextProfile = {
+          fullName: serverProfile.nome ?? "",
+          ra: serverProfile.ra ?? "",
+          email: serverProfile.email ?? "",
+        };
+        setProfile(nextProfile);
+        setDraft(nextProfile);
+      })
+      .catch(() => toast.error("Não foi possível carregar o perfil."));
   }, [user]);
 
   function handleSaveProfile() {
@@ -76,11 +58,14 @@ export function StudentPerfil() {
       email: profile.email,
     };
 
-    localStorage.setItem(getProfileStorageKey(user.ra), JSON.stringify(nextProfile));
-    setProfile(nextProfile);
-    setDraft(nextProfile);
-    setIsEditing(false);
-    toast.success("Perfil atualizado com sucesso.");
+    updateProfile(user.id, { nome: nextProfile.fullName, email: nextProfile.email })
+      .then(() => {
+        setProfile(nextProfile);
+        setDraft(nextProfile);
+        setIsEditing(false);
+        toast.success("Perfil atualizado com sucesso.");
+      })
+      .catch(() => toast.error("Não foi possível atualizar o perfil."));
   }
 
   function handleCancelEdit() {

@@ -12,6 +12,12 @@ export async function setApiToken(token: string | null) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message);
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let res: Response;
   try {
@@ -30,7 +36,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw new Error(data?.erro || `Erro ${res.status} ao acessar o servidor.`);
+    throw new ApiError(data?.erro || `Erro ${res.status} ao acessar o servidor.`, res.status);
   }
 
   return data as T;
@@ -49,11 +55,10 @@ export type ApiLoginResponse = {
   };
 };
 
-// O back-end atual só aceita { email, senha } no login.
-export async function apiLogin(email: string, senha: string) {
+export async function apiLogin(identificador: string, senha: string) {
   const data = await request<ApiLoginResponse>("/usuarios/login", {
     method: "POST",
-    body: JSON.stringify({ email: email.trim(), senha }),
+    body: JSON.stringify({ ra: identificador.trim(), senha }),
   });
 
   if (data.token) await setApiToken(data.token);
@@ -74,6 +79,20 @@ export async function apiRegister(payload: {
 }
 
 export type ApiUser = { id: string; ra?: string; nome: string; email: string; ativo?: boolean };
+
+export async function fetchProfile() {
+  const data = await request<{ usuario: ApiUser & { tipo?: "aluno" | "funcionario"; cargo?: string } }>(
+    "/usuarios/perfil"
+  );
+  return data.usuario;
+}
+
+export async function updateProfile(id: string, payload: { nome: string; email: string }) {
+  return request<ApiUser>(`/usuarios/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
 
 export async function fetchUsers() {
   return request<ApiUser[]>("/usuarios");
@@ -127,6 +146,8 @@ export default {
   fetchPackages,
   fetchNotifications,
   fetchUsers,
+  fetchProfile,
+  updateProfile,
   apiLogin,
   apiRegister,
   createPackage,

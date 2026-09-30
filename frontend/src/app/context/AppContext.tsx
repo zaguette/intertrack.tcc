@@ -13,6 +13,7 @@ import {
 } from "../lib/api";
 import { AppNotification, PackageItem, User } from "../lib/types";
 import { fromEncomendaApi, toEncomendaPayload, toStatusId } from "../lib/adapters";
+import { ApiError } from "../lib/api";
 
 type ActionResult = { ok: boolean; error?: string };
 
@@ -184,7 +185,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return mapped;
     } catch (e) {
       console.error("Erro no login:", e);
-      return null;
+      if (e instanceof ApiError && (e.status === 401 || e.status === 403)) return null;
+      throw e;
     }
   }
 
