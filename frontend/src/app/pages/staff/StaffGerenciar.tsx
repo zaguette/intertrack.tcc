@@ -1,4 +1,4 @@
-import { ArrowLeft, Info, Search } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { StaffLayout } from "../../components/StaffLayout";
@@ -126,12 +126,6 @@ export function StaffGerenciar() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-start gap-3 rounded-xl border border-[var(--app-border)] bg-[var(--panel-bg)] p-4">
-        <Info size={16} className="mt-0.5 flex-shrink-0 text-[var(--accent-text)]" />
-        <p className="text-sm text-[var(--muted-text)]">
-          Esta tela e apenas para filtro e consulta. As acoes de editar status e excluir ficam na Pagina Inicial.
-        </p>
-      </div>
     </StaffLayout>
   );
 }

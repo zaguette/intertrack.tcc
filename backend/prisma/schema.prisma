@@ -75,6 +75,7 @@ model NomeAlternativo {
   nome_completo String        @db.VarChar(150)
   documento     String?       @db.VarChar(20)
   parentesco    Parentesco    @default(outro)
+  tipo          TipoNome      @default(alternativo)
   ativo         Boolean       @default(true)
   created_at    DateTime      @default(now())
   updated_at    DateTime      @updatedAt
@@ -97,6 +98,7 @@ model Encomenda {
   data_entrega            DateTime?
   retirado_por            String?           @db.VarChar(150)
   observacoes             String?           @db.Text
+  autorizado_terceiros    Boolean           @default(false)
   created_at              DateTime          @default(now())
   updated_at              DateTime          @updatedAt
   autorizacoes            Autorizacao[]
@@ -207,4 +209,9 @@ enum Parentesco {
   irma
   responsavel
   outro
+}
+
+enum TipoNome {
+  alternativo
+  autorizado
 }

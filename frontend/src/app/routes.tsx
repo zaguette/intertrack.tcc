@@ -4,11 +4,13 @@ import { LoginPage } from "./pages/LoginPage";
 import { StudentConsultar } from "./pages/student/StudentConsultar";
 import { StudentDashboard } from "./pages/student/StudentDashboard";
 import { StudentHistorico } from "./pages/student/StudentHistorico";
+import { StudentNomesAutorizados } from "./pages/student/StudentNomesAutorizados";
 import { StudentPerfil } from "./pages/student/StudentPerfil";
 import { StaffCadastrar } from "./pages/staff/StaffCadastrar";
 import { StaffDashboard } from "./pages/staff/StaffDashboard";
 import { StaffGraficos } from "./pages/staff/StaffGraficos";
 import { StaffGerenciar } from "./pages/staff/StaffGerenciar";
+import { StaffAlunos } from "./pages/staff/StaffAlunos";
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +50,22 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/aluno/nomes-autorizados",
+    element: (
+      <ProtectedRoute requiredTipo="aluno">
+        <StudentNomesAutorizados section="autorizado" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/aluno/nomes-alternativos",
+    element: (
+      <ProtectedRoute requiredTipo="aluno">
+        <StudentNomesAutorizados section="alternativo" />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: "/funcionario",
     element: (
       <ProtectedRoute requiredTipo="funcionario">
@@ -60,6 +78,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute requiredTipo="funcionario">
         <StaffGraficos />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/funcionario/alunos",
+    element: (
+      <ProtectedRoute requiredTipo="funcionario">
+        <StaffAlunos />
       </ProtectedRoute>
     ),
   },

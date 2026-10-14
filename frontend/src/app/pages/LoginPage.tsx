@@ -171,19 +171,29 @@ export function LoginPage() {
             {/* Identificador */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                {staffLogin && !isRegister ? "E-mail do funcionário" : "RA"}
+                {staffLogin && !isRegister ? "E-mail do funcionário" : "RA ou e-mail"}
               </label>
               <input
-                type={staffLogin && !isRegister ? "email" : "text"}
-                placeholder={staffLogin && !isRegister ? "Ex: func@unasp.local" : "Ex: 123456"}
-                inputMode={staffLogin && !isRegister ? "email" : "numeric"}
-                maxLength={staffLogin && !isRegister ? undefined : 6}
+                type="text"
+                placeholder={staffLogin && !isRegister ? "Ex: admin@intertrack.com" : "Ex: 123456 ou admin@intertrack.com"}
+                inputMode={staffLogin && !isRegister ? "email" : "text"}
+                maxLength={isRegister ? 6 : undefined}
                 value={staffLogin && !isRegister ? contact : ra}
-                onChange={(e) =>
-                  staffLogin && !isRegister
-                    ? setContact(e.target.value)
-                    : setRa(e.target.value.replace(/\D/g, "").slice(0, 6))
-                }
+                onChange={(e) => {
+                  if (isRegister) {
+                    setRa(e.target.value.replace(/\D/g, "").slice(0, 6));
+                    return;
+                  }
+
+                  const value = e.target.value;
+                  if (staffLogin || /[^\d]/.test(value)) {
+                    setStaffLogin(true);
+                    setContact(value);
+                    return;
+                  }
+
+                  setRa(value.replace(/\D/g, "").slice(0, 6));
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     isRegister ? handleRegister() : handleLogin();

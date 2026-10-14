@@ -107,6 +107,7 @@ body {
   background-color: var(--table-bg) !important;
   color: var(--app-text) !important;
   border-color: var(--app-border) !important;
+  color-scheme: dark;
 }
 
 :root[data-theme="dark"] option {

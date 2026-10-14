@@ -1,5 +1,6 @@
-import { Calendar, Package, PackageCheck } from "lucide-react";
+import { Calendar, Lock, Package, PackageCheck, Unlock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { StatCard } from "../../components/StatCard";
 import { StatusBadge } from "../../components/StatusBadge";
 import { StudentLayout } from "../../components/StudentLayout";
@@ -7,7 +8,7 @@ import { useApp } from "../../context/AppContext";
 import { formatDateTime } from "../../lib/adapters";
 
 export function StudentDashboard() {
-  const { user, packages } = useApp();
+  const { user, packages, togglePackageThirdPartyAuthorization } = useApp();
   const navigate = useNavigate();
 
   // A API já retorna somente as encomendas do aluno logado
@@ -88,7 +89,23 @@ export function StudentDashboard() {
                         {pkg.codigo}
                       </p>
                     </div>
-                    <Package size={20} className="mt-1 flex-shrink-0 text-blue-400" />
+                    {pkg.status !== "entregue" && pkg.status !== "collected" ? <button
+                      type="button"
+                      onClick={async () => {
+                        const nextValue = !pkg.autorizadoParaTerceiros;
+                        const result = await togglePackageThirdPartyAuthorization(pkg.id, nextValue);
+                        if (!result.ok) {
+                          toast.error(result.error ?? "Não foi possível alterar a autorização.");
+                          return;
+                        }
+                        toast.success(nextValue ? "Retirada por terceiros autorizada para esta encomenda." : "Retirada restrita apenas ao titular.");
+                      }}
+                      className={`group flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition ${pkg.autorizadoParaTerceiros ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-200" : "bg-blue-50 text-blue-500 hover:bg-blue-100"}`}
+                      title={pkg.autorizadoParaTerceiros ? "Retirada por terceiros autorizada" : "Autorizar retirada por terceiros"}
+                      aria-label={pkg.autorizadoParaTerceiros ? "Restringir retirada ao titular" : "Autorizar retirada por terceiros"}
+                    >
+                      {pkg.autorizadoParaTerceiros ? <Unlock size={19} /> : <Lock size={19} />}
+                    </button> : <Package size={20} className="mt-1 flex-shrink-0 text-blue-400" />}
                   </div>
                   <div className="mt-3 flex items-center gap-1.5 text-xs text-gray-500">
                     <Calendar size={12} />
@@ -97,6 +114,7 @@ export function StudentDashboard() {
                   <div className="mt-3">
                     <StatusBadge status={pkg.status} />
                   </div>
+                  {pkg.autorizadoParaTerceiros && <span className="mt-1 text-xs font-medium text-emerald-600">Retirada por terceiros autorizada</span>}
                 </div>
               ))}
             </div>

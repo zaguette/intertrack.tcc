@@ -44,6 +44,12 @@ router.patch(
   encomendaController.updateStatus
 );
 
+router.patch(
+  '/:id/autorizacao-terceiros',
+  verificarToken,
+  encomendaController.updateThirdPartyAuthorization
+);
+
 // Excluir encomenda — apenas administrador e supervisor
 router.delete(
   '/:id',

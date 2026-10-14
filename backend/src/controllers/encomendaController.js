@@ -4,7 +4,8 @@ import {
   listarNotificacoes,
   buscarEncomendaPorId,
   atualizarStatusEncomenda,
-  deletarEncomenda
+  deletarEncomenda,
+  alterarAutorizacaoTerceiros
 } from '../services/encomendas.services.js';
 
 export const encomendaController = {
@@ -101,7 +102,20 @@ export const encomendaController = {
 
     } catch (error) {
       console.error("ERRO AO ATUALIZAR STATUS:", error);
-      res.status(500).json({ erro: "Não foi possível atualizar o status da encomenda." });
+      res.status(400).json({ erro: error.message || "Não foi possível atualizar o status da encomenda." });
+    }
+  },
+
+  async updateThirdPartyAuthorization(req, res) {
+    try {
+      const encomenda = await alterarAutorizacaoTerceiros(
+        req.params.id,
+        req.user.id,
+        req.body.autorizado_para_terceiros
+      );
+      return res.json(encomenda);
+    } catch (error) {
+      return res.status(400).json({ erro: error.message || "Não foi possível alterar a autorização." });
     }
   },
 

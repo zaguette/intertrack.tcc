@@ -1,11 +1,22 @@
-import { CalendarDays, Clock3, UserRound } from "lucide-react";
+import { CalendarDays, Clock3, Lock, Package, Unlock, UserRound } from "lucide-react";
+import { toast } from "sonner";
 import { StudentLayout } from "../../components/StudentLayout";
 import { useApp } from "../../context/AppContext";
 import { Card } from "../../components/ui/Card";
 import { formatDateTime } from "../../lib/adapters";
 
 export function StudentHistorico() {
-  const { packages } = useApp();
+  const { packages, togglePackageThirdPartyAuthorization } = useApp();
+
+  async function toggleAuthorization(pkgId: string, currentValue: boolean | undefined) {
+    const nextValue = !currentValue;
+    const result = await togglePackageThirdPartyAuthorization(pkgId, nextValue);
+    if (!result.ok) {
+      toast.error(result.error ?? "Não foi possível alterar a autorização.");
+      return;
+    }
+    toast.success(nextValue ? "Retirada por terceiros autorizada para esta encomenda." : "Retirada restrita apenas ao titular.");
+  }
 
   // A API já retorna somente as encomendas do aluno logado
   const myPackages = packages;
@@ -54,10 +65,13 @@ export function StudentHistorico() {
           {myPackages.map((pkg) => (
             <Card key={pkg.id} className="border border-[var(--app-border)] bg-[var(--panel-bg)]">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
+                <div className="flex items-start gap-3">
+                  {pkg.status !== "entregue" && pkg.status !== "collected" ? <button type="button" onClick={() => toggleAuthorization(pkg.id, pkg.autorizadoParaTerceiros)} className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition ${pkg.autorizadoParaTerceiros ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-200" : "bg-black/5 text-[var(--accent-text)] hover:bg-black/10"}`} title={pkg.autorizadoParaTerceiros ? "Restringir retirada ao titular" : "Autorizar retirada por terceiros"} aria-label={pkg.autorizadoParaTerceiros ? "Restringir retirada ao titular" : "Autorizar retirada por terceiros"}>{pkg.autorizadoParaTerceiros ? <Unlock size={18} /> : <Lock size={18} />}</button> : <Package size={20} className="mt-1 flex-shrink-0 text-blue-400" />}
+                  <div>
                   <p className="text-xs uppercase tracking-wide text-[var(--muted-text)]">Código</p>
                   <h2 className="mt-1 text-lg font-semibold text-[var(--app-text)]">{pkg.codigo}</h2>
                   <p className="mt-2 text-sm text-[var(--muted-text)]">{pkg.aluno}</p>
+                  </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-4">
                   <div className="rounded-2xl border border-[var(--app-border)] bg-black/5 p-4">

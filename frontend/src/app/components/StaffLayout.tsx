@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChartColumn, Filter, LayoutDashboard, LogOut, Menu, PackagePlus, SunMoon, X } from "lucide-react";
+import { ChartColumn, Filter, LayoutDashboard, LogOut, Menu, PackagePlus, SunMoon, Users, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { UNASPLogo } from "./UNASPLogo";
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/funcionario", label: "Página Inicial", icon: LayoutDashboard, end: true },
   { to: "/funcionario/cadastrar", label: "Cadastrar", icon: PackagePlus, end: false },
   { to: "/funcionario/gerenciar", label: "Filtros", icon: Filter, end: false },
+  { to: "/funcionario/alunos", label: "Alunos cadastrados", icon: Users, end: false },
   { to: "/funcionario/graficos", label: "Gráficos", icon: ChartColumn, end: false },
 ];
 

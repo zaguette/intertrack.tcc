@@ -29,6 +29,11 @@ router.post("/login", userController.login);
 // Perfil do usuário autenticado
 router.get("/perfil", verificarToken, userController.profile);
 
+router.get("/:id/nomes-alternativos", verificarToken, verificarDonoOuFuncionario, userController.listAlternatives);
+router.post("/:id/nomes-alternativos", verificarToken, verificarDonoOuFuncionario, userController.createAlternative);
+router.patch("/:id/nomes-alternativos/:nomeId", verificarToken, verificarDonoOuFuncionario, userController.updateAlternative);
+router.delete("/:id/nomes-alternativos/:nomeId", verificarToken, verificarDonoOuFuncionario, userController.deleteAlternative);
+
 // =========================
 // CRUD DE USUÁRIOS
 // =========================
@@ -44,5 +49,6 @@ router.put("/:id", verificarToken, verificarDonoOuFuncionario, userController.up
 
 // Desativar usuário — apenas administrador
 router.delete("/:id", verificarToken, apenasCargos("administrador"), userController.delete);
+router.patch("/:id/status", verificarToken, apenasCargos("administrador"), userController.updateStatus);
 
 export default router;

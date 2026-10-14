@@ -241,7 +241,18 @@ export const userController = {
                     email: true,
                     telefone: true,
                     ativo: true,
-                    created_at: true
+                    created_at: true,
+                    nomesAlternativos: {
+                        where: { ativo: true },
+                        select: {
+                            id: true,
+                            nome_completo: true,
+                            documento: true,
+                            parentesco: true,
+                            tipo: true,
+                            ativo: true
+                        }
+                    }
                 }
             });
 
@@ -380,32 +391,18 @@ export const userController = {
     // DESATIVAR USUÁRIO
     // =========================
     async delete(req, res) {
-
         try {
-
             const { id } = req.params;
-
-            // Verifica se o usuário existe
             const usuario = await prisma.usuario.findUnique({
-                where: {
-                    id
-                }
+                where: { id }
             });
-
             if (!usuario) {
-                return res.status(404).json({
-                    erro: "Usuário não encontrado."
-                });
+                return res.status(404).json({ erro: "Usuário não encontrado." });
             }
 
-            // Desativa o usuário
             const usuarioDesativado = await prisma.usuario.update({
-                where: {
-                    id
-                },
-                data: {
-                    ativo: false
-                },
+                where: { id },
+                data: { ativo: false },
                 select: {
                     id: true,
                     codigo: true,
@@ -421,15 +418,101 @@ export const userController = {
                 mensagem: "Usuário desativado com sucesso!",
                 usuario: usuarioDesativado
             });
-
         } catch (error) {
-
             console.error(error);
+            return res.status(500).json({ erro: "Erro ao desativar usuário." });
+        }
+    },
 
-            return res.status(500).json({
-                erro: "Erro ao desativar usuário."
+    async updateStatus(req, res) {
+        try {
+            const usuario = await prisma.usuario.update({
+                where: { id: req.params.id },
+                data: { ativo: Boolean(req.body.ativo) },
+                select: { id: true, codigo: true, nome: true, email: true, ra: true, ativo: true, updated_at: true }
             });
+            return res.json({ mensagem: usuario.ativo ? "Usuário ativado com sucesso!" : "Usuário desativado com sucesso!", usuario });
+        } catch (error) {
+            console.error(error);
+            return res.status(400).json({ erro: "Não foi possível alterar o status do usuário." });
+        }
+    },
 
+        async listAlternatives(req, res) {
+            try {
+                const usuario = await prisma.usuario.findUnique({ where: { id: req.params.id }, select: { id: true } });
+                if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
+
+                const nomes = await prisma.nomeAlternativo.findMany({
+                    where: { usuario_id: req.params.id },
+                    orderBy: { created_at: "asc" }
+                });
+                return res.json(nomes);
+            } catch (error) {
+                console.error(error);
+                return res.status(500).json({ erro: "Erro ao listar nomes autorizados." });
+            }
+        },
+
+        async createAlternative(req, res) {
+            try {
+                const { nome_completo, documento, parentesco, tipo = "autorizado", ativo = true } = req.body;
+                if (!String(nome_completo ?? "").trim()) {
+                    return res.status(400).json({ erro: "Informe o nome autorizado." });
                 }
+
+                const usuario = await prisma.usuario.findUnique({ where: { id: req.params.id }, select: { id: true } });
+                if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
+
+                const nome = await prisma.nomeAlternativo.create({
+                    data: {
+                        id: uuidv4(),
+                        usuario_id: req.params.id,
+                        nome_completo: String(nome_completo).trim(),
+                        documento: documento ? String(documento).trim() : null,
+                        parentesco: parentesco || "outro",
+                        tipo: tipo === "alternativo" ? "alternativo" : "autorizado",
+                        ativo: Boolean(ativo)
+                    }
+                });
+                return res.status(201).json(nome);
+            } catch (error) {
+                console.error(error);
+                return res.status(400).json({ erro: "Erro ao cadastrar nome autorizado." });
+            }
+        },
+
+        async updateAlternative(req, res) {
+            try {
+                const nome = await prisma.nomeAlternativo.findUnique({ where: { id: req.params.nomeId } });
+                if (!nome || nome.usuario_id !== req.params.id) return res.status(404).json({ erro: "Nome autorizado não encontrado." });
+
+                const atualizado = await prisma.nomeAlternativo.update({
+                    where: { id: req.params.nomeId },
+                    data: {
+                        ...(req.body.nome_completo !== undefined ? { nome_completo: String(req.body.nome_completo).trim() } : {}),
+                        ...(req.body.documento !== undefined ? { documento: req.body.documento ? String(req.body.documento).trim() : null } : {}),
+                        ...(req.body.parentesco !== undefined ? { parentesco: req.body.parentesco } : {}),
+                        ...(req.body.tipo !== undefined ? { tipo: req.body.tipo === "alternativo" ? "alternativo" : "autorizado" } : {}),
+                        ...(req.body.ativo !== undefined ? { ativo: Boolean(req.body.ativo) } : {})
+                    }
+                });
+                return res.json(atualizado);
+            } catch (error) {
+                console.error(error);
+                return res.status(400).json({ erro: "Erro ao atualizar autorização." });
+            }
+        },
+
+        async deleteAlternative(req, res) {
+            try {
+                const nome = await prisma.nomeAlternativo.findUnique({ where: { id: req.params.nomeId } });
+                if (!nome || nome.usuario_id !== req.params.id) return res.status(404).json({ erro: "Nome autorizado não encontrado." });
+                await prisma.nomeAlternativo.delete({ where: { id: req.params.nomeId } });
+                return res.json({ mensagem: "Nome autorizado removido." });
+            } catch (error) {
+                console.error(error);
+                return res.status(400).json({ erro: "Erro ao remover nome autorizado." });
+            }
         }
 };

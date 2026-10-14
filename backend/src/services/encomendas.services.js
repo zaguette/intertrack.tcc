@@ -140,6 +140,19 @@ export const listarEncomendas = async (
   });
 };
 
+export const alterarAutorizacaoTerceiros = async (encomenda_id, usuario_id, autorizado) => {
+  const encomenda = await prisma.encomenda.findFirst({
+    where: { id: encomenda_id, destinatario_usuario_id: usuario_id },
+    select: { id: true }
+  });
+  if (!encomenda) throw new Error("Encomenda não encontrada.");
+
+  return prisma.encomenda.update({
+    where: { id: encomenda_id },
+    data: { autorizado_terceiros: Boolean(autorizado) }
+  });
+};
+
 export const buscarEncomendaPorId = async (id) => {
   return await prisma.encomenda.findUnique({
     where: {
@@ -183,6 +196,32 @@ export const atualizarStatusEncomenda = async (
   retirado_por
 ) => {
   return await prisma.$transaction(async (tx) => {
+    if (retirado_por) {
+      const encomendaAtual = await tx.encomenda.findUnique({
+        where: { id },
+        include: {
+          destinatario: {
+            select: {
+              nome: true,
+              nomesAlternativos: { where: { ativo: true, tipo: "autorizado" }, select: { nome_completo: true } }
+            }
+          }
+        }
+      });
+
+      if (!encomendaAtual) throw new Error("Encomenda não encontrada.");
+      const retiradoNormalizado = String(retirado_por).trim().toLocaleLowerCase();
+      const nomesPermitidos = [encomendaAtual.destinatario.nome];
+      if (encomendaAtual.autorizado_terceiros) {
+        nomesPermitidos.push(...encomendaAtual.destinatario.nomesAlternativos.map((nome) => nome.nome_completo));
+      }
+      const nomesNormalizados = nomesPermitidos.map((nome) => nome.trim().toLocaleLowerCase());
+
+      if (!nomesNormalizados.includes(retiradoNormalizado)) {
+        throw new Error("A pessoa informada não está autorizada pelo aluno para retirar esta encomenda.");
+      }
+    }
+
     const encomenda = await tx.encomenda.update({
       where: {
         id

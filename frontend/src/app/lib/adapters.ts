@@ -76,6 +76,7 @@ export function fromEncomendaApi(e: any): PackageItem {
     collectedAt: e.data_entrega ?? undefined,
     collectedBy: e.retirado_por ?? undefined,
     history: historyFromApi(e),
+    autorizadoParaTerceiros: Boolean(e.autorizado_terceiros),
     status: statusFromApi(e),
   } as PackageItem;
 }

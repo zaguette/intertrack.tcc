@@ -15,6 +15,7 @@ export const criarNomeAlternativo = async (dados, usuario_id) => {
       nome_completo,
       parentesco,
       documento: dados.documento ? String(dados.documento).trim() : null,
+      tipo: "alternativo",
       usuario_id
     }
   });

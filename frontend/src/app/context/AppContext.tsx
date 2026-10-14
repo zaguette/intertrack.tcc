@@ -4,14 +4,21 @@ import {
   fetchPackages as fetchPackagesFromApi,
   fetchNotifications,
   fetchUsers,
+  fetchAuthorizedNames,
   apiLogin,
   apiRegister,
   createPackage,
   updatePackageStatus,
+  updatePackageThirdPartyAuthorization,
   deletePackage as apiDeletePackage,
+  deactivateUser as apiDeactivateUser,
+  updateUserStatus,
+  createAuthorizedName,
+  updateAuthorizedName as apiUpdateAuthorizedName,
+  deleteAuthorizedName,
   setApiToken
 } from "../lib/api";
-import { AppNotification, PackageItem, User } from "../lib/types";
+import { AppNotification, AuthorizedName, PackageItem, User } from "../lib/types";
 import { fromEncomendaApi, toEncomendaPayload, toStatusId } from "../lib/adapters";
 import { ApiError } from "../lib/api";
 
@@ -20,6 +27,7 @@ type ActionResult = { ok: boolean; error?: string };
 interface AppContextType {
   user: User | null;
   packages: PackageItem[];
+  users: User[];
   notifications: AppNotification[];
   theme: "light" | "dark";
   login: (identificador: string, password: string) => Promise<User | null>;
@@ -33,7 +41,15 @@ interface AppContextType {
   logout: () => void;
   addPackage: (pkg: PackageItem) => Promise<ActionResult>;
   updatePackage: (id: string, updates: Partial<PackageItem>) => Promise<ActionResult>;
+  togglePackageThirdPartyAuthorization: (id: string, autorizado: boolean) => Promise<ActionResult>;
   deletePackage: (id: string) => Promise<ActionResult>;
+  refreshUsers: () => Promise<ActionResult>;
+  deactivateUser: (id: string) => Promise<ActionResult>;
+  toggleUserStatus: (id: string, ativo: boolean) => Promise<ActionResult>;
+  getAuthorizedNames: (userId: string) => Promise<AuthorizedName[]>;
+  addAuthorizedName: (userId: string, payload: Omit<AuthorizedName, "id">) => Promise<ActionResult>;
+  updateAuthorizedName: (userId: string, nameId: string, payload: Partial<Omit<AuthorizedName, "id">>) => Promise<ActionResult>;
+  removeAuthorizedName: (userId: string, nameId: string) => Promise<ActionResult>;
   toggleTheme: () => void;
 }
 
@@ -73,10 +89,30 @@ function errorMessage(e: unknown, fallback: string) {
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [packages, setPackages] = useState<PackageItem[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const packagesRequestVersion = useRef(0);
   const notificationsRequestVersion = useRef(0);
+
+  async function refreshUsers(): Promise<ActionResult> {
+    try {
+      const list = await fetchUsers();
+      setUsers(list.map((item) => ({
+        id: item.id,
+        nome: item.nome,
+        email: item.email,
+        ra: item.ra ?? "",
+        ativo: item.ativo,
+        tipo: "aluno",
+        nomesAlternativos: item.nomesAlternativos,
+        nomesAutorizados: item.nomesAlternativos?.filter((name) => name.tipo === "autorizado")
+      })));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao carregar alunos.") };
+    }
+  }
 
   // Sempre relê a lista do banco: a tela mostra exatamente o que está no MySQL
   async function reloadPackages() {
@@ -124,8 +160,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) {
       setPackages([]);
       setNotifications([]);
+      setUsers([]);
       return;
     }
+
+    if (user.tipo === "funcionario") refreshUsers();
 
     // Carrega imediatamente ao entrar
     reloadPackages().catch((e) => {
@@ -266,6 +305,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function togglePackageThirdPartyAuthorization(id: string, autorizado: boolean): Promise<ActionResult> {
+    try {
+      await updatePackageThirdPartyAuthorization(id, autorizado);
+      await reloadPackages();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Não foi possível alterar a autorização da encomenda.") };
+    }
+  }
+
   async function deletePackage(id: string): Promise<ActionResult> {
     try {
       await apiDeletePackage(id);
@@ -274,6 +323,66 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { ok: true };
     } catch (e) {
       return { ok: false, error: errorMessage(e, "Erro ao excluir encomenda.") };
+    }
+  }
+
+  async function deactivateUser(id: string): Promise<ActionResult> {
+    try {
+      await apiDeactivateUser(id);
+      await refreshUsers();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao desativar aluno.") };
+    }
+  }
+
+  async function toggleUserStatus(id: string, ativo: boolean): Promise<ActionResult> {
+    try {
+      await updateUserStatus(id, ativo);
+      await refreshUsers();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao alterar status do aluno.") };
+    }
+  }
+
+  async function getAuthorizedNames(userId: string) {
+    const names = await fetchAuthorizedNames(userId);
+    setUsers((current) => current.map((item) => item.id === userId ? {
+      ...item,
+      nomesAlternativos: names,
+      nomesAutorizados: names.filter((name) => name.tipo === "autorizado")
+    } : item));
+    return names;
+  }
+
+  async function addAuthorizedName(userId: string, payload: Omit<AuthorizedName, "id">): Promise<ActionResult> {
+    try {
+      await createAuthorizedName(userId, payload);
+      await getAuthorizedNames(userId);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao cadastrar autorização.") };
+    }
+  }
+
+  async function updateAuthorizedName(userId: string, nameId: string, payload: Partial<Omit<AuthorizedName, "id">>): Promise<ActionResult> {
+    try {
+      await apiUpdateAuthorizedName(userId, nameId, payload);
+      await getAuthorizedNames(userId);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao atualizar autorização.") };
+    }
+  }
+
+  async function removeAuthorizedName(userId: string, nameId: string): Promise<ActionResult> {
+    try {
+      await deleteAuthorizedName(userId, nameId);
+      await getAuthorizedNames(userId);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errorMessage(e, "Erro ao remover autorização.") };
     }
   }
 
@@ -290,6 +399,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         packages,
+        users,
         notifications,
         theme,
         login,
@@ -297,7 +407,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         logout,
         addPackage,
         updatePackage,
+        togglePackageThirdPartyAuthorization,
         deletePackage,
+        refreshUsers,
+        deactivateUser,
+        toggleUserStatus,
+        getAuthorizedNames,
+        addAuthorizedName,
+        updateAuthorizedName,
+        removeAuthorizedName,
         toggleTheme
       }}
     >

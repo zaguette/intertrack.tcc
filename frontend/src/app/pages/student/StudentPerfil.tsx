@@ -41,6 +41,7 @@ export function StudentPerfil() {
       .catch(() => toast.error("Não foi possível carregar o perfil."));
   }, [user]);
 
+
   function handleSaveProfile() {
     if (!user?.ra) return;
     if (!draft.fullName.trim()) {

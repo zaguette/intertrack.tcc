@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, MoonStar, Search, UserRound, X } from "lucide-react";
+import { KeyRound, LayoutDashboard, LogOut, MoonStar, Search, Tag, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
@@ -12,6 +12,8 @@ interface StudentLayoutProps {
 const navItems = [
   { to: "/aluno", label: "Página Inicial", icon: LayoutDashboard, end: true },
   { to: "/aluno/historico", label: "Histórico", icon: Search, end: false },
+  { to: "/aluno/nomes-alternativos", label: "Nomes alternativos", icon: Tag, end: false },
+  { to: "/aluno/nomes-autorizados", label: "Nomes autorizados", icon: KeyRound, end: false },
   { to: "/aluno/perfil", label: "Perfil", icon: UserRound, end: false },
 ];
 

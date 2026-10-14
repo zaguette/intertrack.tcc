@@ -78,7 +78,23 @@ export async function apiRegister(payload: {
   });
 }
 
-export type ApiUser = { id: string; ra?: string; nome: string; email: string; ativo?: boolean };
+export type ApiAuthorizedName = {
+  id: string;
+  nome_completo: string;
+  documento?: string | null;
+  parentesco: "pai" | "mae" | "irmao" | "irma" | "responsavel" | "outro";
+  tipo: "alternativo" | "autorizado";
+  ativo: boolean;
+};
+
+export type ApiUser = {
+  id: string;
+  ra?: string;
+  nome: string;
+  email: string;
+  ativo?: boolean;
+  nomesAlternativos?: ApiAuthorizedName[];
+};
 
 export async function fetchProfile() {
   const data = await request<{ usuario: ApiUser & { tipo?: "aluno" | "funcionario"; cargo?: string } }>(
@@ -96,6 +112,43 @@ export async function updateProfile(id: string, payload: { nome: string; email: 
 
 export async function fetchUsers() {
   return request<ApiUser[]>("/usuarios");
+}
+
+export async function fetchUser(id: string) {
+  return request<ApiUser>(`/usuarios/${id}`);
+}
+
+export async function deactivateUser(id: string) {
+  return request<{ mensagem: string; usuario: ApiUser }>(`/usuarios/${id}`, { method: "DELETE" });
+}
+
+export async function updateUserStatus(id: string, ativo: boolean) {
+  return request<{ mensagem: string; usuario: ApiUser }>(`/usuarios/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ ativo })
+  });
+}
+
+export async function fetchAuthorizedNames(userId: string) {
+  return request<ApiAuthorizedName[]>(`/usuarios/${userId}/nomes-alternativos`);
+}
+
+export async function createAuthorizedName(userId: string, payload: Omit<ApiAuthorizedName, "id">) {
+  return request<ApiAuthorizedName>(`/usuarios/${userId}/nomes-alternativos`, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function updateAuthorizedName(userId: string, nameId: string, payload: Partial<Omit<ApiAuthorizedName, "id">>) {
+  return request<ApiAuthorizedName>(`/usuarios/${userId}/nomes-alternativos/${nameId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function deleteAuthorizedName(userId: string, nameId: string) {
+  return request<{ mensagem: string }>(`/usuarios/${userId}/nomes-alternativos/${nameId}`, { method: "DELETE" });
 }
 
 export async function fetchPackages() {
@@ -135,6 +188,13 @@ export async function updatePackageStatus(
       status_atual_id: statusAtualId,
       ...(retiradoPor ? { retirado_por: retiradoPor } : {})
     }),
+  });
+}
+
+export async function updatePackageThirdPartyAuthorization(id: string, autorizado: boolean) {
+  return request<any>(`/encomendas/${id}/autorizacao-terceiros`, {
+    method: "PATCH",
+    body: JSON.stringify({ autorizado_para_terceiros: autorizado })
   });
 }
 

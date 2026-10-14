@@ -7,7 +7,7 @@ export type User = {
   nome?: string;
   email?: string;
   ra?: string;
-  nomesAlternativos?: string[];
+  nomesAlternativos?: AuthorizedName[];
   tipo?: UserTipo;
   cargo?: string; // "administrador" | "supervisor" | "recebimento" | "porteiro" (vem da API)
   // optional fields used by auth/register components
@@ -16,6 +16,17 @@ export type User = {
   role?: UserRole;
   contato?: string;
   name?: string;
+  ativo?: boolean;
+  nomesAutorizados?: AuthorizedName[];
+};
+
+export type AuthorizedName = {
+  id: string;
+  nome_completo: string;
+  documento?: string | null;
+  parentesco: "pai" | "mae" | "irmao" | "irma" | "responsavel" | "outro";
+  tipo: "alternativo" | "autorizado";
+  ativo: boolean;
 };
 
 export type PackageStatus =
@@ -51,6 +62,7 @@ export type PackageItem = {
   collectedBy?: string;
   collectedByRa?: string;
   history?: { id: string; status: string; createdAt?: string }[];
+  autorizadoParaTerceiros?: boolean;
   // common
   status: PackageStatus;
 };

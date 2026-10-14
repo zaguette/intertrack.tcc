@@ -27,7 +27,7 @@ const statusOptions: { value: PackageStatus; label: string }[] = [
 const CARGOS_QUE_EXCLUEM = ["administrador", "supervisor"];
 
 export function StaffDashboard() {
-  const { user, packages, updatePackage, deletePackage } = useApp();
+  const { user, packages, users, updatePackage, deletePackage } = useApp();
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState<PackageStatus>("disponivel");
@@ -51,6 +51,8 @@ const recent = [...packages]
   .slice(0, 5);
   const pendingDeletePkg = packages.find((pkg) => pkg.id === confirmDeleteId);
   const deliveryPkg = packages.find((pkg) => pkg.id === deliveryModalId);
+  const deliveryStudent = users.find((student) => student.ra === deliveryPkg?.ra);
+  const collectorOptions = deliveryStudent ? [deliveryStudent.nome ?? "", ...(deliveryPkg?.autorizadoParaTerceiros ? (deliveryStudent.nomesAutorizados ?? []).filter((name) => name.ativo).map((name) => name.nome_completo) : [])] : [];
 
   function formatDate(date?: string) {
     if (!date) return "—";
@@ -111,10 +113,9 @@ const recent = [...packages]
       return;
     }
     if (!RA_PATTERN.test(collectorRa)) {
-      toast.error("O RA de quem retirou deve conter exatamente 6 dígitos numéricos.");
+      toast.error("Informe o RA de quem retirou com exatamente 6 dígitos.");
       return;
     }
-
     setBusy(true);
     const result = await updatePackage(deliveryPkg.id, {
       status: "entregue",
@@ -172,13 +173,12 @@ const recent = [...packages]
               Informe os dados de quem retirou a encomenda <strong>{deliveryPkg.codigo}</strong>.
             </p>
             <div className="mt-4 space-y-3">
-              <input
-                type="text"
-                value={collectorName}
-                onChange={(e) => setCollectorName(e.target.value)}
-                placeholder="Nome de quem retirou"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
+              <select value={collectorName} onChange={(e) => setCollectorName(e.target.value)} className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                <option value="">Selecione quem retirou</option>
+                {collectorOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+              </select>
+              {!deliveryPkg?.autorizadoParaTerceiros && <p className="text-xs text-amber-600">Esta encomenda está restrita ao aluno titular. A autorização por terceiros está bloqueada.</p>}
+              {collectorOptions.length === 0 && <p className="text-xs text-rose-600">Este aluno não possui nomes autorizados carregados. Cadastre a autorização no perfil antes da entrega.</p>}
               <input
                 type="text"
                 inputMode="numeric"
