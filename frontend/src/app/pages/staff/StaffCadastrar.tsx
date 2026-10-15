@@ -159,10 +159,14 @@ export function StaffCadastrar() {
     return results;
   }) : [];
 
-  function selectStudent(student: typeof users[number]) {
-    setForm((prev) => ({ ...prev, alunoId: student.id, nomeAluno: student.nome ?? "", ra: student.ra ?? "" }));
+  function selectStudent(student: typeof users[number], matchedName: string) {
+    setForm((prev) => ({ ...prev, alunoId: student.id, nomeAluno: matchedName, ra: student.ra ?? "" }));
     setStudentSearchOpen(false);
   }
+
+  const selectedStudent = form.alunoId
+    ? users.find((student) => student.id === form.alunoId)
+    : undefined;
 
   return (
     <StaffLayout>
@@ -199,14 +203,18 @@ export function StaffCadastrar() {
             {studentSearchOpen && suggestions.length > 0 && (
               <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
                 {suggestions.slice(0, 8).map(({ student, matchedName, matchedCategory, isAlternative }, index) => (
-                  <button key={`${student.id}-${matchedName}-${index}`} type="button" onClick={() => selectStudent(student)} className="flex w-full flex-col gap-1 px-3 py-2.5 text-left text-sm hover:bg-blue-50">
-                    <span className="font-medium text-gray-800">{matchedName}{isAlternative && <span className="font-normal text-gray-500">{matchedCategory ? ` (${matchedCategory})` : " (Nome Alternativo)"}</span>}</span>
+                  <button key={`${student.id}-${matchedName}-${index}`} type="button" onClick={() => selectStudent(student, matchedName)} className="flex w-full flex-col gap-1 px-3 py-2.5 text-left text-sm hover:bg-blue-50">
+                    <span className="font-medium text-gray-800">{matchedName}{isAlternative && <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700">(Nome Alternativo)</span>}</span>
                     <span className="text-xs text-gray-500">{isAlternative ? <>Aluno Titular: <strong>{student.nome ?? student.name}</strong> | </> : null}RA: {student.ra} | E-mail: {student.email}</span>
                   </button>
                 ))}
               </div>
             )}
-            {form.alunoId && <p className="mt-1 flex items-center gap-1 text-xs text-emerald-600"><Check size={13} /> Aluno selecionado: RA {form.ra} · {users.find((student) => student.id === form.alunoId)?.email}</p>}
+            {selectedStudent && <div className="mt-2 space-y-1 text-xs text-emerald-600">
+              <p className="flex items-center gap-1"><Check size={13} /> Aluno titular: <strong>{selectedStudent.nome ?? selectedStudent.name}</strong></p>
+              <p>RA: {form.ra} · E-mail: {selectedStudent.email}</p>
+              {form.nomeAluno !== (selectedStudent.nome ?? selectedStudent.name) && <p>Nome alternativo utilizado: <strong>{form.nomeAluno}</strong></p>}
+            </div>}
           </div>
 
           {/* RA preenchido automaticamente */}
