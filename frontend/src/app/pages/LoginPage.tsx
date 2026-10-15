@@ -28,7 +28,7 @@ export function LoginPage() {
 
   async function handleLogin() {
     if (!staffLogin && !RA_PATTERN.test(ra)) {
-      toast.error("O RA deve conter exatamente 6 dígitos numéricos.");
+      toast.error("O RA deve conter exatamente 6 dígitos. Coloque um 0 no início do RA.");
       return;
     }
     if (staffLogin && !contact.trim()) {
@@ -59,7 +59,7 @@ export function LoginPage() {
       return;
     }
     if (!RA_PATTERN.test(ra)) {
-      toast.error("O RA deve conter exatamente 6 dígitos numéricos.");
+      toast.error("O RA deve conter exatamente 6 dígitos. Coloque um 0 no início do RA.");
       return;
     }
     if (!contact.trim()) {
@@ -171,28 +171,22 @@ export function LoginPage() {
             {/* Identificador */}
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                {staffLogin && !isRegister ? "E-mail do funcionário" : "RA ou e-mail"}
+                {staffLogin && !isRegister ? "E-mail do funcionário" : "RA do aluno"}
               </label>
               <input
                 type="text"
-                placeholder={staffLogin && !isRegister ? "Ex: admin@intertrack.com" : "Ex: 123456 ou admin@intertrack.com"}
-                inputMode={staffLogin && !isRegister ? "email" : "text"}
+                placeholder={staffLogin && !isRegister ? "Ex: admin@intertrack.com" : "Digite seu RA com 6 dígitos"}
+                inputMode={staffLogin && !isRegister ? "email" : "numeric"}
                 maxLength={isRegister ? 6 : undefined}
                 value={staffLogin && !isRegister ? contact : ra}
                 onChange={(e) => {
-                  if (isRegister) {
+                  if (isRegister || !staffLogin) {
                     setRa(e.target.value.replace(/\D/g, "").slice(0, 6));
                     return;
                   }
 
                   const value = e.target.value;
-                  if (staffLogin || /[^\d]/.test(value)) {
-                    setStaffLogin(true);
-                    setContact(value);
-                    return;
-                  }
-
-                  setRa(value.replace(/\D/g, "").slice(0, 6));
+                  setContact(value);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
