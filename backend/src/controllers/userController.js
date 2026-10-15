@@ -228,8 +228,28 @@ export const userController = {
     // =========================
     async findAll(req, res) {
         try {
+            if (req.query.busca !== undefined && typeof req.query.busca !== "string") {
+                return res.status(400).json({ erro: "O parâmetro busca deve ser um texto." });
+            }
+            const busca = req.query.busca?.trim();
 
             const usuarios = await prisma.usuario.findMany({
+                where: busca ? {
+                    ativo: true,
+                    OR: [
+                        { nome: { contains: busca } },
+                        { ra: { contains: busca } },
+                        {
+                            nomesAlternativos: {
+                                some: {
+                                    nome_completo: { contains: busca },
+                                    ativo: true,
+                                    tipo: "alternativo"
+                                }
+                            }
+                        }
+                    ]
+                } : {},
                 orderBy: {
                     created_at: "desc"
                 },

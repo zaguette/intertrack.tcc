@@ -150,6 +150,23 @@ Authorization: Bearer {{ _.token }}
 
 Retorna os usuários ordenados do cadastro mais recente para o mais antigo.
 
+### Buscar destinatário por nome alternativo
+
+```http
+GET {{ _.base_url }}/usuarios?busca=Maria
+Authorization: Bearer {{ _.token }}
+```
+
+Disponível apenas para funcionários. Retorna usuários ativos por correspondência parcial
+no nome principal, RA ou nome alternativo ativo do tipo `alternativo`. Pessoas cadastradas
+somente como `autorizado` para retirada não participam da busca por nome alternativo.
+
+O resultado é o titular que cadastrou o nome. Use seu `id` como `destinatario_usuario_id`
+ao cadastrar a encomenda. Havendo vários titulares correspondentes, todos são retornados
+para seleção; nenhum é escolhido automaticamente. Sem correspondências, retorna `[]`.
+Sem `busca` ou com texto vazio, mantém a listagem completa. Parâmetros `busca` repetidos
+ou estruturados retornam HTTP 400.
+
 ### Buscar usuário por ID
 
 ```http

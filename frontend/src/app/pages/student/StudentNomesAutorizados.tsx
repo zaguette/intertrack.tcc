@@ -71,7 +71,7 @@ export function StudentNomesAutorizados({ section }: { section: AuthorizedName["
       toast.error("Informe um nome.");
       return;
     }
-    const result = await addAuthorizedName(user.id, { nome_completo: name.trim(), parentesco: relationship, tipo, ativo: tipo === "autorizado" });
+    const result = await addAuthorizedName(user.id, { nome_completo: name.trim(), parentesco: relationship, tipo, ativo: true });
     if (!result.ok) {
       toast.error(result.error ?? "Não foi possível cadastrar a autorização.");
       return;
