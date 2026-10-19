@@ -122,7 +122,7 @@ export function LoginPage() {
       {/* Background */}
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/campus.png')" }}
+        style={{ backgroundImage: `url("${import.meta.env.BASE_URL}campus.png")` }}
       />
       <div className="absolute inset-0 bg-blue-950/60" />
 
@@ -132,7 +132,7 @@ export function LoginPage() {
           {/* Logo */}
           <div className="mb-6 flex flex-col items-center gap-3">
             <div className="flex h-24 w-24 items-center justify-center rounded-full bg-orange-500 shadow-lg">
-              <img src="/logounasp.png" alt="UNASP Logo" className="h-[5.5rem] w-[5.5rem] object-contain" />
+              <img src={`${import.meta.env.BASE_URL}logounasp.png`} alt="UNASP Logo" className="h-[5.5rem] w-[5.5rem] object-contain" />
             </div>
             <div className="text-center">
               <h1 className="text-xl font-black tracking-wide text-[var(--unasp-orange)] uppercase">UNASP</h1>

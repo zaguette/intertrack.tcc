@@ -38,7 +38,7 @@ export const encomendaController = {
 
     } catch (error) {
       console.error("ERRO AO LISTAR ENCOMENDAS:", error);
-      res.status(500).json({ erro: error.message });
+      res.status(500).json({ erro: "Não foi possível concluir a operação." });
     }
   },
 
@@ -47,7 +47,7 @@ export const encomendaController = {
       const notificacoes = await listarNotificacoes(req.user.id);
       res.json(notificacoes);
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      res.status(500).json({ erro: "Não foi possível concluir a operação." });
     }
   },
 
@@ -78,7 +78,7 @@ export const encomendaController = {
       res.json(encomenda);
 
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      res.status(500).json({ erro: "Não foi possível concluir a operação." });
     }
   },
 
@@ -102,7 +102,7 @@ export const encomendaController = {
 
     } catch (error) {
       console.error("ERRO AO ATUALIZAR STATUS:", error);
-      res.status(400).json({ erro: error.message || "Não foi possível atualizar o status da encomenda." });
+      res.status(400).json({ erro: (error.name === "Error" ? error.message : null) || "Não foi possível atualizar o status da encomenda." });
     }
   },
 
@@ -115,7 +115,7 @@ export const encomendaController = {
       );
       return res.json(encomenda);
     } catch (error) {
-      return res.status(400).json({ erro: error.message || "Não foi possível alterar a autorização." });
+      return res.status(400).json({ erro: (error.name === "Error" ? error.message : null) || "Não foi possível alterar a autorização." });
     }
   },
 
@@ -131,7 +131,7 @@ export const encomendaController = {
       });
 
     } catch (error) {
-      res.status(500).json({ erro: error.message });
+      res.status(500).json({ erro: "Não foi possível concluir a operação." });
     }
   }
 };

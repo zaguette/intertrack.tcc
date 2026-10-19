@@ -18,7 +18,7 @@ export function UNASPLogo({ size = "md", showText = true, dark = false }: UNASPL
   return (
     <div className="flex items-center gap-3">
       <div className={`${s.circle} flex items-center justify-center rounded-full bg-orange-500 flex-shrink-0`}>
-        <img src="/logounasp.png" alt="UNASP Logo" className={`${s.image} object-contain`} />
+        <img src={`${import.meta.env.BASE_URL}logounasp.png`} alt="UNASP Logo" className={`${s.image} object-contain`} />
       </div>
       {showText && (
         <div className="flex flex-col leading-tight">

@@ -1,4 +1,5 @@
-const API_PREFIX = "/api";
+const API_PREFIX = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
+if (!API_PREFIX) throw new Error("VITE_API_URL não configurada.");
 const TOKEN_KEY = "intertrack_api_token";
 
 function getAuthHeader(): Record<string, string> {
@@ -30,7 +31,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       },
     });
   } catch {
-    throw new Error("Não foi possível conectar ao servidor.");
+    throw new Error("NÃ£o foi possÃ­vel conectar ao servidor.");
   }
 
   const data = await res.json().catch(() => null);

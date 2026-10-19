@@ -1,8 +1,3 @@
-import dotenv from 'dotenv'
-import { gerarId } from './src/models/usuarioModels.js'
+import { gerarId } from "./models/id.models.js";
 
-dotenv.config()
-
-console.log(process.env.DATABASE_URL)
-
-console.log(gerarId())
+console.log(gerarId());

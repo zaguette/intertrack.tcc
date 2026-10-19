@@ -26,6 +26,12 @@ const STATUS = [
 ];
 
 async function main() {
+  if (Boolean(process.env.SEED_ADMIN_EMAIL) !== Boolean(process.env.SEED_ADMIN_PASSWORD)) {
+    throw new Error("Informe SEED_ADMIN_EMAIL e SEED_ADMIN_PASSWORD juntos.");
+  }
+  if (process.env.SEED_ADMIN_PASSWORD && process.env.SEED_ADMIN_PASSWORD.length < 12) {
+    throw new Error("SEED_ADMIN_PASSWORD deve ter pelo menos 12 caracteres.");
+  }
   for (const s of STATUS) {
     await prisma.statusEncomenda.upsert({
       where: { id: s.id },
@@ -38,44 +44,18 @@ async function main() {
     });
   }
 
-  // Funcionário de teste (troque a senha depois)
-  await prisma.funcionario.upsert({
-    where: { email: "admin@intertrack.com" },
-    update: {},
-    create: {
-      id: uuidv4(),
-      nome: "Administrador",
-      email: "admin@intertrack.com",
-      senha: await bcrypt.hash("admin123", 10),
-      cargo: "administrador"
-    }
-  });
-
-  // Funcionário de recebimento de teste
-  await prisma.funcionario.upsert({
-    where: { email: "func1@email.com" },
-    update: {},
-    create: {
-      id: uuidv4(),
-      nome: "Funcionário 1",
-      email: "func1@email.com",
-      senha: await bcrypt.hash("123456", 10),
-      cargo: "recebimento"
-    }
-  });
-
-  // Aluno de teste
-  await prisma.usuario.upsert({
-    where: { email: "aluno@intertrack.com" },
-    update: {},
-    create: {
-      id: uuidv4(),
-      ra: "123456",
-      nome: "Aluno Teste",
-      email: "aluno@intertrack.com",
-      senha: await bcrypt.hash("aluno123", 10)
-    }
-  });
+  // Administração inicial opcional, sem sobrescrever contas existentes.
+  if (process.env.SEED_ADMIN_EMAIL && process.env.SEED_ADMIN_PASSWORD) {
+    await prisma.funcionario.upsert({
+      where: { email: process.env.SEED_ADMIN_EMAIL }, update: {},
+      create: {
+        id: uuidv4(), nome: "Administrador",
+        email: process.env.SEED_ADMIN_EMAIL,
+        senha: await bcrypt.hash(process.env.SEED_ADMIN_PASSWORD, 10),
+        cargo: "administrador"
+      }
+    });
+  }
 
   console.log("✅ Banco populado com sucesso!");
 }

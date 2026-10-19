@@ -1,5 +1,5 @@
-import prisma from '../config/prisma.js'
-import { gerarId } from '../models/id.model.js'
+import { prisma } from '../config/prisma.js'
+import { gerarId } from '../models/id.models.js'
 
 export async function criarUsuario(req, res) {
     try {
@@ -17,7 +17,7 @@ export async function criarUsuario(req, res) {
 
     } catch (error) {
         res.status(500).json({
-            erro: error.message
+            erro: "Não foi possível concluir a operação."
         })
     }
 }

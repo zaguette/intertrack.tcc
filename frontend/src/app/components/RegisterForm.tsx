@@ -66,7 +66,7 @@ export default function RegisterForm({ onCancel, onRegistered }: RegisterFormPro
       >
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-md bg-unasp-orange">
-            <img src="/logounasp.png" alt="Logo UNASP" className="h-8 w-8 object-contain" />
+            <img src={`${import.meta.env.BASE_URL}logounasp.png`} alt="Logo UNASP" className="h-8 w-8 object-contain" />
           </div>
           <div>
             <h1 className="text-lg font-bold text-unasp-navy">Cadastro de Usuário</h1>

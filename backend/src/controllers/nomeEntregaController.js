@@ -14,7 +14,7 @@ export const nomeEntregaController = {
       res.status(201).json(resultado);
     } catch (error) {
       res.status(500).json({
-        erro: error.message
+        erro: "Não foi possível concluir a operação."
       });
     }
   },
@@ -28,7 +28,7 @@ export const nomeEntregaController = {
       res.json(nomes);
     } catch (error) {
       res.status(500).json({
-        erro: error.message
+        erro: "Não foi possível concluir a operação."
       });
     }
   },
@@ -44,7 +44,7 @@ export const nomeEntregaController = {
       });
     } catch (error) {
       res.status(500).json({
-        erro: error.message
+        erro: "Não foi possível concluir a operação."
       });
     }
   }
