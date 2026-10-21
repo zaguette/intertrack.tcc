@@ -25,7 +25,7 @@ const STATUS = {
     nome_status: "Entregue",
     descricao: "Encomenda retirada"
   }
-} as const;
+};
 
 const studentNames = [
   "Sabriny Veloso", "Ana Beatriz Martins", "Bruno Henrique Costa", "Camila Fernanda Alves",
@@ -49,9 +49,9 @@ const surnames = [
 ];
 
 const alternativePatterns = [
-  (name: string) => name.split(" ").slice(0, 2).join(" "),
-  (name: string) => `${name.split(" ")[0]} ${surnames[0]}`,
-  (name: string) => `${name.split(" ")[0]} ${surnames[1]}`
+  (name) => name.split(" ").slice(0, 2).join(" "),
+  (name) => `${name.split(" ")[0]} ${surnames[0]}`,
+  (name) => `${name.split(" ")[0]} ${surnames[1]}`
 ];
 
 const parentNames = [
@@ -60,12 +60,12 @@ const parentNames = [
   "Antônio Carlos Ribeiro", "Sandra Maria Oliveira"
 ];
 
-const authorizedRelations = ["pai", "mae", "irmao", "irma", "responsavel", "outro"] as const;
+const authorizedRelations = ["pai", "mae", "irmao", "irma", "responsavel", "outro"];
 
-const idFor = (type: string, index: number) =>
+const idFor = (type, index) =>
   uuidv5(`${type}:${index}`, UUID_NAMESPACE);
 
-const emailFor = (name: string, index: number) => {
+const emailFor = (name, index) => {
   const normalized = name
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -158,15 +158,15 @@ async function main() {
       });
       users.push(usuario);
 
-      const alternatives: Array<{ nome_completo: string; parentesco: typeof authorizedRelations[number] }> = index === 0
+      const alternatives = index === 0
         ? [
-          { nome_completo: "Cássia Silva de Miranda", parentesco: "mae" as const },
-          { nome_completo: "José Iran Mendes", parentesco: "pai" as const }
+          { nome_completo: "Cássia Silva de Miranda", parentesco: "mae" },
+          { nome_completo: "José Iran Mendes", parentesco: "pai" }
         ]
         : [
           {
             nome_completo: alternativePatterns[index % alternativePatterns.length](studentNames[index]),
-            parentesco: "outro" as const
+            parentesco: "outro"
           },
           {
             nome_completo: parentNames[index % parentNames.length],
@@ -256,6 +256,9 @@ async function main() {
         });
       }
     }
+  }, {
+    maxWait: 10000,
+    timeout: 120000
   });
 
   console.log("Seed concluído: 50 alunos, nomes alternativos/autorizados e 50 encomendas.");
